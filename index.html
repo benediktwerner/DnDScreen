@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>DnD Screen</title>
+
+    <link rel="stylesheet" href="/css/bootstrap-reboot.min.css" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/fonts/requiem.css" />
+
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10vh;
+      }
+      img {
+        height: 25vh;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="/img/logos/dnd.svg" />
+      <a class="button large light" href="/player">Player</a>
+      <a class="button large light" href="#" onclick="onDm()">Dungeon Master</a>
+    </div>
+
+    <script>
+      function onDm() {
+        window.location.replace("/dm?password=" + btoa(prompt("Password:")));
+      }
+    </script>
+  </body>
+</html>

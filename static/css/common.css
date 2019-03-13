@@ -1,0 +1,103 @@
+body {
+  height: 100vh;
+}
+
+::selection {
+  background-color: #58180d;
+  color: #faf7ea;
+}
+
+h1,
+h2,
+h3,
+h4,
+h1 input,
+h2 input,
+h3 input,
+h4 input {
+  font-family: MrJeeves;
+  font-weight: 800;
+  color: #58180d;
+  border-bottom: 2px solid #c9ad6a;
+}
+h1 input,
+h2 input,
+h3 input,
+h4 input {
+  font-size: inherit;
+}
+
+.currency {
+  width: 25px;
+  filter: url(#drop-shadow);
+}
+
+.button,
+.button:hover,
+button,
+button:hover {
+  background-color: #9b2a17;
+  border: none;
+  color: #faf7ea;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  padding: 0.4em 1.2em;
+  font-size: 1rem;
+  border-radius: 0.25em;
+  font-family: Requiem;
+}
+.button:hover,
+button:hover {
+  background-color: #8b2514;
+}
+.button.light {
+  background-color: #ec2127;
+}
+.button.light:hover {
+  background-color: #df1319;
+}
+.button.large {
+  margin: 0.5em;
+  font-size: 1.5rem;
+}
+button:focus {
+  outline: 0;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 2fr 6fr;
+}
+
+input {
+  display: block;
+  width: 100%;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  border: none;
+  border-bottom: 2px solid #c9ad6a;
+  background-color: transparent;
+  transition: border-color 150ms ease-in-out;
+}
+input:focus {
+  border-color: #58180d;
+  outline: 0;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+label {
+  padding-top: calc(0.375rem + 1px);
+  padding-bottom: calc(0.375rem + 1px);
+  margin-bottom: 0;
+  font-size: inherit;
+  line-height: 1.5;
+}
