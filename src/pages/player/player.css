@@ -1,0 +1,33 @@
+body {
+  background-image: url('/img/pergament.jpg');
+}
+.common {
+  position: fixed;
+  width: 300px;
+  height: 200px;
+  background-color: white;
+  padding: 10px;
+}
+.one {
+  bottom: 0;
+  left: 0;
+}
+.two {
+  bottom: 0;
+  right: 0;
+  transform: rotate(-90deg);
+  margin-left: -50px;
+  margin-top: 50px;
+}
+.three {
+  top: 0;
+  right: 0;
+  transform: rotate(180deg);
+}
+.four {
+  top: 0;
+  left: 0;
+  transform: rotate(90deg);
+  margin-left: -50px;
+  margin-top: 50px;
+}

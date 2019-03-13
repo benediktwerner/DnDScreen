@@ -11,19 +11,11 @@ import ws_handler
 DM_PASSWORD = base64.b64encode(b"1337dm").decode().replace("=", "")
 
 
-def html_response(file):
-    if os.path.isfile(file):
-        with open(file) as f:
-            return web.Response(text=f.read(), content_type="text/html")
-    raise web.HTTPNotFound()
+def redirect_handler(target):
+    async def handler(request):
+        raise web.HTTPFound(target)
 
-
-async def index_handler(request):
-    return html_response("index.html")
-
-
-async def player_handler(request):
-    return html_response("player.html")
+    return handler
 
 
 async def player_socket_handler(request):
@@ -45,13 +37,10 @@ async def player_socket_handler(request):
     return ws
 
 
-async def dm_handler(request):
-    if request.query.get("password") == DM_PASSWORD:
-        return html_response("dm.html")
-    raise web.HTTPForbidden()
-
-
 async def dm_socket_handler(request):
+    if request.query.get("password") != DM_PASSWORD:
+        raise web.HTTPForbidden()
+
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     ws_handler.dm_websockets.append(ws)
@@ -73,12 +62,16 @@ async def dm_socket_handler(request):
 app = web.Application()
 app.add_routes(
     [
-        web.get("/", index_handler),
-        web.get("/dm", dm_handler),
+        web.get("/", redirect_handler("/pages/index.html")),
+        web.get("/dm", redirect_handler("/pages/dm/dm.html")),
+        web.get("/player", redirect_handler("/pages/player/player.html")),
         web.get("/dm_socket", dm_socket_handler),
-        web.get("/player", player_handler),
         web.get("/player_socket", player_socket_handler),
-        web.static("/", "static"),
+        web.static("/pages", "pages"),
+        web.static("/css", "static/css"),
+        web.static("/fonts", "static/fonts"),
+        web.static("/img", "static/img"),
+        web.static("/", "static/icons"),
     ]
 )
 web.run_app(app)

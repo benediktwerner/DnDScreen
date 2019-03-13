@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Player Screen</title>
+    <title>D&D Screen</title>
 
+    <!-- Favicons & Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -14,26 +15,34 @@
     <meta name="msapplication-TileColor" content="#ec2127" />
     <meta name="theme-color" content="#ec2127" />
 
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="/css/bootstrap-reboot.min.css" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/fonts/requiem.css" />
+
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10vh;
+      }
+      img {
+        height: 25vh;
+        margin-bottom: 1rem;
+      }
+    </style>
   </head>
   <body>
-    Player
-
-    <script>
-      // const ws = new WebSocket('ws://' + window.location.host + '/player_socket');
-
-      // ws.onopen = function() {
-      //   ws.send('init');
-      // };
-
-      // ws.onmessage = function(e) {
-      //   const { data, type } = JSON.parse(e.data);
-
-      //   if (type == 'msg') {
-      //     alert(data);
-      //   } else if (type == 'data') {
-      //   }
-      // };
-    </script>
+    <div class="container">
+      <img src="/img/logos/dnd.svg" />
+      <a class="button large light" href="/player">Player</a>
+      <a class="button large light" href="/dm">Dungeon Master</a>
+    </div>
   </body>
 </html>

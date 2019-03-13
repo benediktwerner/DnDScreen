@@ -1,0 +1,159 @@
+body {
+  font-family: Requiem;
+}
+
+.container {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 400px auto 300px;
+}
+
+.sidebar {
+  background-image: url('/img/pergament.jpg');
+  padding: 10px;
+  position: relative;
+}
+.sidebar button {
+  margin-top: 10px;
+}
+
+.banner-img {
+  width: 250px;
+  margin-left: -10px;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-bottom: -10px;
+  padding: 5px;
+}
+
+.player,
+.sidebar .total {
+  margin-bottom: 20px;
+  padding: 7px;
+  background-color: #fdf1dc;
+  border-style: solid;
+  border-width: 5px;
+  border-color: #c9ad6a;
+  border-left: none;
+  border-right: none;
+  box-shadow: 1px 4px 14px #888;
+  font-family: Requiem;
+}
+.player {
+  cursor: pointer;
+}
+.sidebar .total {
+  position: absolute;
+  bottom: 0;
+}
+
+.player-table th:nth-child(1),
+.player-table th:nth-child(2),
+.player-table th:nth-child(3),
+.player-table td:nth-child(1),
+.player-table td:nth-child(3),
+.player-table td:nth-child(5) {
+  padding-left: 7px;
+}
+.player-table th:nth-child(1),
+.player-table th:nth-child(2),
+.player-table td:nth-child(2),
+.player-table td:nth-child(4) {
+  padding-right: 7px;
+}
+
+.dialog-backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease-in-out;
+}
+.dialog-backdrop.hidden {
+  background-color: transparent;
+  pointer-events: none;
+}
+.dialog {
+  min-width: 400px;
+  padding: 10px;
+  background-color: #fdf1dc;
+  border-style: solid;
+  border-width: 5px;
+  border-color: #c9ad6a;
+  border-left: none;
+  border-right: none;
+  box-shadow: 1px 4px 14px #888;
+  transition: all 300ms ease-in-out;
+}
+.dialog-backdrop.hidden .dialog {
+  opacity: 0;
+  transform: translateY(100px);
+}
+.dialog button.action {
+  margin-top: 15px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  float: right;
+}
+
+.stats-table {
+  border-collapse: separate;
+  border-spacing: 10px 1px;
+  text-align: center;
+  margin: 0 -10px;
+}
+
+.hidden-inputs input {
+  border-color: transparent;
+  display: inline-block;
+  text-align: center;
+  height: initial;
+}
+.hidden-inputs input:focus {
+  border-color: #58180d;
+  outline: 0;
+}
+
+.dialog .player-info h2 input {
+  width: 150px;
+}
+.dialog .player-info h2 input.xp {
+  width: 100px;
+}
+
+table input {
+  width: 50px;
+  padding: 0;
+}
+
+.messages {
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 0;
+}
+.messages-container {
+  max-height: 250px;
+  overflow-y: auto;
+}
+.messages-container div {
+  border-bottom: 2px solid #c9ad6a;
+}
+.messages button {
+  position: absolute;
+  right: 5px;
+  top: -55px;
+}
+
+.fix-font {
+  font-family: Arial;
+}

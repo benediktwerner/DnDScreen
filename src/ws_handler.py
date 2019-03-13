@@ -7,8 +7,8 @@ import aiohttp
 
 from data import Data
 
-DATA_FILE = "data.json"
-BACKUP_FILE = "data.bkp.json"
+DATA_FILE = "data/data.json"
+BACKUP_FILE = "data/data.bkp.json"
 
 
 def _load_data():
