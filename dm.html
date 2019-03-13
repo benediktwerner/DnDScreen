@@ -509,7 +509,7 @@
           $('.dialog .total').$(key).value = val;
         }
 
-        $$('.dialog input').forEach(e => {
+        $$('.dialog table input').forEach(e => {
           e.addEventListener('change', onPlayerDialogChange);
           e.addEventListener('click', e => e.target.select());
         });
