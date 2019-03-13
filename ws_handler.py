@@ -66,7 +66,7 @@ async def _handle_init(ws):
 
 async def _handle_save(ws):
     _dump_data(data)
-    await send(ws, "Gespeichert!")
+    await send(ws, "Gespeichert")
 
 
 async def _handle_long_rest(ws):
