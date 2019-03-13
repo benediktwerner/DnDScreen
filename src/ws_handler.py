@@ -7,8 +7,9 @@ import aiohttp
 
 from data import Data
 
-DATA_FILE = "data/data.json"
-BACKUP_FILE = "data/data.bkp.json"
+DATA_DIR = "data"
+DATA_FILE = os.path.join(DATA_DIR, "data.json")
+BACKUP_FILE = os.path.join(DATA_DIR, "data.bkp.json")
 
 
 def _load_data():
@@ -19,6 +20,7 @@ def _load_data():
 
 
 def _dump_data(data, backup=False):
+    os.makedirs(DATA_DIR, exist_ok=True)
     file_name = BACKUP_FILE if backup else DATA_FILE
     with open(file_name, "w") as f:
         return json.dump(data.to_json(), f)
