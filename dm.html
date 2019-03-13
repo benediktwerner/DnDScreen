@@ -142,11 +142,18 @@
         bottom: 0;
         left: 15px;
         right: 0;
+      }
+      .messages-container {
         max-height: 250px;
         overflow-y: auto;
       }
-      .messages div {
+      .messages-container div {
         border-bottom: 2px solid #c9ad6a;
+      }
+      .messages button {
+        position: absolute;
+        right: 5px;
+        top: -55px;
       }
       .fix-font {
         font-family: Arial;
@@ -191,7 +198,10 @@
         <button onclick="send('save')">Speichern</button>
         <button onclick="confirm(() => send('long-rest'))">Lange Rast</button>
         <button onclick="showRewardsDialog()">Belohnung</button>
-        <div class="messages"></div>
+        <div class="messages">
+          <button type="button" onclick="clearMessages()" hidden>X</button>
+          <div class="messages-container"></div>
+        </div>
       </div>
     </div>
 
@@ -381,9 +391,7 @@
         const { data, type } = JSON.parse(e.data);
 
         if (type == 'msg') {
-          const newMessage = document.createElement('div');
-          newMessage.innerText = data;
-          $('.messages').appendChild(newMessage);
+          addMessage(data);
         } else if (type == 'data') {
           if (data.players) {
             let money = { copper: 0, silver: 0, gold: 0, electrum: 0, platin: 0 };
@@ -412,6 +420,19 @@
           closeDialog();
         }
       };
+
+      function addMessage(msg) {
+        const newMessage = document.createElement('div');
+        newMessage.innerText = msg;
+        $('.messages-container').appendChild(newMessage);
+        $('.messages-container').scrollTop = $('.messages-container').scrollHeight;
+        $('.messages button').hidden = false;
+      }
+
+      function clearMessages() {
+        $$('.messages-container div').forEach(e => e.remove());
+        $('.messages button').hidden = true;
+      }
     </script>
     <script>
       let dialog_backdrop;
