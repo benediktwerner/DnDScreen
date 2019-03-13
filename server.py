@@ -8,7 +8,7 @@ from aiohttp import web
 
 import ws_handler
 
-DM_PASSWORD = base64.b64encode(b"1337dm").decode()
+DM_PASSWORD = base64.b64encode(b"1337dm").decode().replace("=", "")
 
 
 def html_response(file):

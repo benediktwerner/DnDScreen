@@ -37,7 +37,12 @@
 
     <script>
       function onDm() {
-        window.location.replace("/dm?password=" + btoa(prompt("Password:")));
+        window.location.replace(
+          '/dm?password=' +
+            btoa(prompt('Password:'))
+              .replace('==', '')
+              .replace('=', '')
+        );
       }
     </script>
   </body>
