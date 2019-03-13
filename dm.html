@@ -257,7 +257,7 @@
     <template id="player-dialog-template">
       <div class="player-info hidden-inputs">
         <h2>
-          <input class="name" /> - <input class="class" />
+          <input class="name" /> - <input class="cls" />
           <span style="float: right"><input class="xp" type="number" min="0" />xp</span>
         </h2>
         <input class="player-id" type="hidden" />
@@ -332,7 +332,7 @@
     <template id="player-template">
       <div class="player" onclick="showPlayerDialog(event)">
         <h3>
-          <span class="name">Name</span> - <span class="class">Klasse</span>
+          <span class="name">Name</span> - <span class="cls">Klasse</span>
           <span style="float: right">lvl <span class="level">2</span> - <span class="xp">500</span> xp</span>
         </h3>
         <table class="player-table stats-table">
@@ -449,7 +449,7 @@
       function addPlayer() {
         let data = {
           name: $('.dialog .name').value,
-          class: $('.dialog .class').value,
+          cls: $('.dialog .cls').value,
           xp: toInt($('.dialog .xp').value),
         };
         closeDialog();
@@ -465,7 +465,7 @@
 
         values.xp = toInt($('.dialog .xp').value);
         values.name = $('.dialog .name').value;
-        values.class = $('.dialog .class').value;
+        values.cls = $('.dialog .cls').value;
 
         data = {
           id: toInt(
@@ -499,7 +499,7 @@
         $('.dialog .player-id').value = target.id;
 
         $('.dialog .name').value = target.$('name').innerText;
-        $('.dialog .class').value = target.$('class').innerText;
+        $('.dialog .cls').value = target.$('cls').innerText;
         $('.dialog .xp').value = target.$('xp').innerText;
 
         const keys = ['hp', 'hp_total', 'hitdice', 'hitdice_total', 'copper', 'silver', 'gold', 'electrum', 'platin'];

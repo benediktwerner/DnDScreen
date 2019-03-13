@@ -49,7 +49,7 @@ class Data:
 class Player:
     def __init__(self, json):
         self.name = json.get("name", "Unbennant")
-        self.cls = json.get("class", "Keine Klasse")
+        self.cls = json.get("cls", "Keine Klasse")
         self.xp = json.get("xp", 0)
         self.hp = json.get("hp", 0)
         self.hp_total = json.get("hp_total", self.hp)
@@ -86,7 +86,7 @@ class Player:
             "name": self.name,
             "level": self.level,
             "xp": self.xp,
-            "class": self.cls,
+            "cls": self.cls,
             "hp": self.hp,
             "hp_total": self.hp_total,
             "hitdice": self.hitdice,
