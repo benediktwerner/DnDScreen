@@ -88,7 +88,8 @@ async def _handle_update_player(ws, id, values):
 
 async def _handle_reward(ws, **rewards):
     data.reward(rewards)
-    await send_all(data)
+    await send_dm(data)
+    await send_players({"type": "reward", "data": rewards})
 
 
 DM_HANDLERS = {

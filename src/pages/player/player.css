@@ -2,10 +2,20 @@ body {
   background-image: url('/img/pergament.jpg');
 }
 
+canvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background-color: transparent;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+}
+
 .player {
   position: fixed;
-  width: 300px;
-  height: 200px;
   background-color: white;
   padding: 10px;
   cursor: move;
@@ -14,19 +24,181 @@ body {
   border: 2px dashed #000;
 }
 
+.player.one,
+.player.three {
+  min-width: 250px;
+  height: 170px;
+}
+
+.player.hidden {
+  background-color: transparent;
+}
+.player.hidden * {
+  opacity: 0;
+}
+
 .player.one {
   bottom: 0;
-  left: 0;
+  right: 0;
 }
 .player.two {
-  bottom: 0;
   right: 0;
+  top: calc(50vh - 60px);
+  bottom: calc(50vh - 60px);
   transform: rotate(-90deg);
-  margin-right: -50px;
-  margin-bottom: 50px;
+  margin-right: calc(((100vh - 2 * 180px) - 120px) / -2);
+  width: calc(100vh - 2 * 180px);
+  height: 120px;
 }
 .player.three {
   top: 0;
   right: 0;
   transform: rotate(180deg);
+}
+
+.player .tables-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.player.two .tables-container {
+  flex-direction: row;
+}
+
+.player.two .stats-table {
+  margin-right: 25px;
+}
+
+.stats-table th,
+.stats-table td:nth-child(odd) {
+  padding-left: 10px;
+}
+.stats-table th,
+.stats-table td:nth-child(even) {
+  padding-right: 10px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 10px 1px;
+  text-align: center;
+  margin: 0 -10px;
+}
+
+.large table {
+  border-spacing: 15px 7px;
+  font-size: 1.4rem;
+}
+
+.dialog {
+  position: fixed;
+  min-height: 200px;
+  min-width: 400px;
+  padding: 10px;
+  background-color: #fdf1dc;
+  border-style: solid;
+  border-width: 5px;
+  border-color: #c9ad6a;
+  border-left: none;
+  border-right: none;
+  box-shadow: 1px 4px 14px #888;
+  transform-origin: top center;
+  animation-duration: 1000ms;
+  transition: all 150ms ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.dialog.one {
+  top: calc(50vh + 50px);
+  right: calc(40vw + 50px);
+  animation-name: bounce1;
+  transform: scale(1);
+}
+.dialog.two {
+  left: 65vw;
+  top: 50vh;
+  animation-name: bounce2;
+  transform: translateX(-50%) scale(1) rotate(-90deg);
+}
+.dialog.three {
+  bottom: calc(50vh + 50px);
+  right: calc(40vw + 50px);
+  animation-name: bounce3;
+  transform: translateY(100%) scale(-1);
+}
+
+.hidden .dialog {
+  animation: none;
+  opacity: 0;
+}
+.hidden .dialog.one {
+  transform: scale(0);
+}
+.hidden .dialog.two {
+  transform: translateX(-50%) scale(0) rotate(-90deg);
+}
+.hidden .dialog.three {
+  transform: translateY(100%) scale(0);
+}
+
+.xp-reward-dialog {
+  font-size: 4rem;
+  color: #58180d;
+}
+
+@keyframes bounce1 {
+  0% {
+    transform: scale(0);
+  }
+  20% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(0.85);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce2 {
+  0% {
+    transform: translateX(-50%) scale(0) rotate(-90deg);
+  }
+  20% {
+    transform: translateX(-50%) scale(1.4) rotate(-90deg);
+  }
+  50% {
+    transform: translateX(-50%) scale(0.85) rotate(-90deg);
+  }
+  75% {
+    transform: translateX(-50%) scale(1.1) rotate(-90deg);
+  }
+  100% {
+    transform: translateX(-50%) scale(1) rotate(-90deg);
+  }
+}
+
+@keyframes bounce3 {
+  0% {
+    transform: translateY(100%) scale(0);
+  }
+  20% {
+    transform: translateY(100%) scale(-1.4);
+  }
+  50% {
+    transform: translateY(100%) scale(-0.85);
+  }
+  75% {
+    transform: translateY(100%) scale(-1.1);
+  }
+  100% {
+    transform: translateY(100%) scale(-1);
+  }
 }

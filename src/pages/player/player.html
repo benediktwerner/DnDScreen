@@ -24,16 +24,161 @@
   </head>
   <body>
     <div class="players">
-      <div class="player one" id="player-1" draggable="true">
-        <h1>Test 1</h1>
+      <div class="player hidden one" id="player-0" draggable="true">
+        <h3>
+          <span class="name">Name</span>
+          <span style="float: right">lvl <span class="level">2</span> - <span class="xp">500</span> xp</span>
+        </h3>
+        <div class="tables-container">
+          <table class="stats-table">
+            <tr>
+              <th colspan="2">HP</th>
+              <th colspan="2">TW</th>
+            </tr>
+            <tr>
+              <td class="hp">0</td>
+              <td class="hp_total">0</td>
+              <td class="hitdice">0</td>
+              <td class="hitdice_total">0</td>
+            </tr>
+          </table>
+
+          <table>
+            <tr>
+              <th><img class="currency copper" src="/img/currencies/copper.png" /></th>
+              <th><img class="currency silver" src="/img/currencies/silver.png" /></th>
+              <th><img class="currency gold" src="/img/currencies/gold.png" /></th>
+              <th><img class="currency electrum" src="/img/currencies/electrum.png" /></th>
+              <th><img class="currency platin" src="/img/currencies/platin.png" /></th>
+            </tr>
+            <tr>
+              <td class="copper">0</td>
+              <td class="silver">0</td>
+              <td class="gold">0</td>
+              <td class="electrum">0</td>
+              <td class="platin">0</td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="player two" id="player-2" draggable="true">
-        <h1>Test 2</h1>
+      <div class="player hidden two" id="player-1" draggable="true">
+        <h3>
+          <span class="name">Name</span>
+          <span style="float: right">lvl <span class="level">2</span> - <span class="xp">500</span> xp</span>
+        </h3>
+        <div class="tables-container">
+          <table class="stats-table">
+            <tr>
+              <th colspan="2">HP</th>
+              <th colspan="2">TW</th>
+            </tr>
+            <tr>
+              <td class="hp">0</td>
+              <td class="hp_total">0</td>
+              <td class="hitdice">0</td>
+              <td class="hitdice_total">0</td>
+            </tr>
+          </table>
+
+          <table>
+            <tr>
+              <th><img class="currency copper" src="/img/currencies/copper.png" /></th>
+              <th><img class="currency silver" src="/img/currencies/silver.png" /></th>
+              <th><img class="currency gold" src="/img/currencies/gold.png" /></th>
+              <th><img class="currency electrum" src="/img/currencies/electrum.png" /></th>
+              <th><img class="currency platin" src="/img/currencies/platin.png" /></th>
+            </tr>
+            <tr>
+              <td class="copper">0</td>
+              <td class="silver">0</td>
+              <td class="gold">0</td>
+              <td class="electrum">0</td>
+              <td class="platin">0</td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="player three" id="player-3" draggable="true">
-        <h1>Test 3</h1>
+      <div class="player hidden three" id="player-2" draggable="true">
+        <h3>
+          <span class="name">Name</span>
+          <span style="float: right">lvl <span class="level">2</span> - <span class="xp">500</span> xp</span>
+        </h3>
+        <div class="tables-container">
+          <table class="stats-table">
+            <tr>
+              <th colspan="2">HP</th>
+              <th colspan="2">TW</th>
+            </tr>
+            <tr>
+              <td class="hp">0</td>
+              <td class="hp_total">0</td>
+              <td class="hitdice">0</td>
+              <td class="hitdice_total">0</td>
+            </tr>
+          </table>
+
+          <table>
+            <tr>
+              <th><img class="currency copper" src="/img/currencies/copper.png" /></th>
+              <th><img class="currency silver" src="/img/currencies/silver.png" /></th>
+              <th><img class="currency gold" src="/img/currencies/gold.png" /></th>
+              <th><img class="currency electrum" src="/img/currencies/electrum.png" /></th>
+              <th><img class="currency platin" src="/img/currencies/platin.png" /></th>
+            </tr>
+            <tr>
+              <td class="copper">0</td>
+              <td class="silver">0</td>
+              <td class="gold">0</td>
+              <td class="electrum">0</td>
+              <td class="platin">0</td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
+
+    <!-- Dialog backdrop -->
+
+    <div class="dialog-backdrop hidden">
+      <div class="dialog one"></div>
+      <div class="dialog two"></div>
+      <div class="dialog three"></div>
+    </div>
+
+    <!-- Effects canvas -->
+    <canvas></canvas>
+
+    <!-- Dialog templates -->
+
+    <template id="money-reward-dialog-template">
+      <div class="money-reward-dialog large">
+        <h1>Belohnung</h1>
+        <table>
+          <tr>
+            <th><img class="currency copper" src="/img/currencies/copper.png" /></th>
+            <th><img class="currency silver" src="/img/currencies/silver.png" /></th>
+            <th><img class="currency gold" src="/img/currencies/gold.png" /></th>
+            <th><img class="currency electrum" src="/img/currencies/electrum.png" /></th>
+            <th><img class="currency platin" src="/img/currencies/platin.png" /></th>
+          </tr>
+          <tr>
+            <td class="copper">0</td>
+            <td class="silver">0</td>
+            <td class="gold">0</td>
+            <td class="electrum">0</td>
+            <td class="platin">0</td>
+          </tr>
+        </table>
+      </div>
+    </template>
+
+    <template id="xp-reward-dialog-template">
+      <div class="xp-reward-dialog">
+        <div><span class="fix-font">+</span><span class="xp">3000</span> XP</div>
+      </div>
+    </template>
+
+    <!-- Scripts -->
 
     <script src="player.js"></script>
   </body>
