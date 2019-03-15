@@ -206,6 +206,7 @@ class Particle {
 
 function render() {
   if (alive) requestAnimationFrame(render);
+  else ws.send('update');
 
   alive = false;
 

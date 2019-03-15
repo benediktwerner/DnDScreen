@@ -58,7 +58,7 @@ async def send_all(msg):
 
 
 async def handle_player(ws, msg):
-    if msg == "init":
+    if msg in ("init", "update"):
         await send(ws, data)
 
 
