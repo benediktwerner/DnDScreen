@@ -52,6 +52,9 @@ ws.onmessage = function(e) {
   } else if (type == 'reward') {
     if (data.xp > 0) {
       showRewardXpDialog(data.xp);
+    } else {
+      delete data.xp;
+      showRewardMoneyDialog(data);
     }
   }
 };
@@ -126,52 +129,65 @@ function handlePlayerDragEnd() {
 ////////////
 ////////////
 
+const PARTICLE_XP = 1;
+const PARTICLE_MONEY = 2;
 let canvas;
 let ctx;
 let particles;
 let alive;
 let time;
+let particlesPerKey;
 let particlesArrived;
-let originalXp;
-let additionalXp;
+let originalVals;
+let additionalVals;
 let playerCount;
 let targets;
+let particleType;
 
 const DIFFS = [[-1, 0], [1, 0], [0, 0], [0, 1], [0, -1]];
 
 class Particle {
-  constructor(x, y, dest, center, p) {
+  constructor(x, y, dest, center, img = null) {
     this.x = x;
     this.y = y;
+    this.img = img;
 
-    const xdiff = x - center.y;
-    const ydiff = y - center.y;
-    this.vx = Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
-    this.vy = Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
+    if (center === null) {
+      this.vx = Math.random() * 2 - 1;
+      this.vy = Math.random() * 2 - 1;
+    } else {
+      const xdiff = x - center.x;
+      const ydiff = y - center.y;
+      this.vx = Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
+      this.vy = Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
+    }
     this.friction = Math.random() * 0.05 + 0.95;
 
-    this.p = p;
     this.alive = true;
-    this.dest = {
-      x: dest.x + Math.random() * 10 - 5,
-      y: dest.y + Math.random() * 10 - 5,
-    };
+    this.dest = dest;
   }
 
   render(imageData) {
     if (!this.alive) return false;
 
-    for (const [xd, yd] of DIFFS) {
-      const pos = (~~this.x + xd + (~~this.y + yd) * imageData.width) * 4;
-      const w = xd == 0 && yd == 0 ? 1 : Math.exp(time / 100) - 1;
-      imageData.data[pos] += 0x58 * w;
-      imageData.data[pos + 1] += 0x18 * w;
-      imageData.data[pos + 2] += 0x0d * w;
-      imageData.data[pos + 3] = 0xff;
+    if (this.img === null) {
+      for (const [xd, yd] of DIFFS) {
+        const pos = (~~this.x + xd + (~~this.y + yd) * imageData.width) * 4;
+        const w = xd == 0 && yd == 0 ? 1 : Math.exp(time / 100) - 1;
+        imageData.data[pos] += 0x58 * w;
+        imageData.data[pos + 1] += 0x18 * w;
+        imageData.data[pos + 2] += 0x0d * w;
+        imageData.data[pos + 3] = 0xff;
+      }
+    } else {
+      const size = Math.max(-(15 / 50) * time + 40, 25);
+      ctx.drawImage(this.img, this.x, this.y, size, size);
     }
 
-    const diffX = this.dest.x - this.x;
-    const diffY = this.dest.y - this.y;
+    const [x1, y1, x2, y2, p, key] = this.dest;
+
+    const diffX = x1 - this.x;
+    const diffY = y1 - this.y;
     const ampl = Math.sqrt(diffX * diffX + diffY * diffY);
     const speed = time / 5;
     this.vx *= this.friction;
@@ -179,9 +195,8 @@ class Particle {
     this.x += this.vx + (ampl > 0 ? diffX * (speed / ampl) : 0);
     this.y += this.vy + (ampl > 0 ? diffY * (speed / ampl) : 0);
 
-    const [x1, y1, x2, y2] = targets[this.p];
-    if (x1 <= this.x && this.x <= x2 && y1 <= this.y && this.y <= y2) {
-      particlesArrived[this.p]++;
+    if (x1 - 5 <= this.x && this.x <= x2 && y1 - 5 <= this.y && this.y <= y2) {
+      particlesArrived[p][key]++;
       return (this.alive = false);
     }
 
@@ -201,15 +216,27 @@ function render() {
     if (p.render(imageData)) alive = true;
   }
 
-  ctx.putImageData(imageData, 0, 0);
+  if (particleType === PARTICLE_XP) ctx.putImageData(imageData, 0, 0);
   time += 1;
 
-  if (time > 500) alive = false;
+  if (time > 500) {
+    alive = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
   for (let i = 0; i < playerCount; i++) {
-    const arrivedPercent = (particlesArrived[i] * playerCount) / particles.length;
-    const arrivedXp = Math.ceil(additionalXp * arrivedPercent * 1.1);
-    $$('.player .xp')[i].innerText = originalXp[i] + Math.min(additionalXp, arrivedXp);
+    for (const key in particlesArrived[i]) {
+      if (additionalVals[key] <= 0) continue;
+
+      const arrivedPercent = particlesArrived[i][key] / particlesPerKey[i][key];
+      const arrivedVals = Math.ceil(additionalVals[key] * arrivedPercent * 1.1);
+
+      if (key === 'xp')
+        $$('.player .xp')[i].innerText = originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+      else {
+        $$('.player td.' + key)[i].innerText = originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+      }
+    }
   }
 }
 
@@ -234,6 +261,7 @@ function showXpParticles(xpAmount) {
   ctx.textAlign = 'center';
 
   const baselinePadding = getBaselinePadding($('.dialog .xp'));
+  particlesPerKey = [];
 
   for (let p = 0; p < playerCount; p++) {
     let rect = $$('.dialog .xp')[p].getBoundingClientRect();
@@ -255,29 +283,94 @@ function showXpParticles(xpAmount) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const targetRect = $$('.player .xp')[p].getBoundingClientRect();
-    const dest = { x: targetRect.x + targetRect.width / 2, y: targetRect.y + targetRect.height / 2 };
+    const dest = [
+      targetRect.x,
+      targetRect.y,
+      targetRect.x + targetRect.width,
+      targetRect.y + targetRect.height,
+      p,
+      'xp',
+    ];
     const center = { x: x + width / 2, y: y + height / 2 };
+    let count = 0;
 
     for (let j = 0; j < height; j += 1) {
       for (let i = 0; i < width; i += 1) {
         if (data[(i + j * width) * 4 + 3] > 150) {
-          particles.push(new Particle(x + i, y + j, dest, center, p));
+          particles.push(new Particle(x + i, y + j, dest, center));
+          count++;
         }
       }
     }
+    particlesPerKey.push({ xp: count });
+  }
+
+  originalVals = [];
+  additionalVals = { xp: xpAmount };
+  particlesArrived = [];
+  for (let p = 0; p < playerCount; p++) {
+    originalVals.push({ xp: toInt($$('.players .xp')[p].innerText) });
+    particlesArrived.push({ xp: 0 });
   }
 
   time = 0;
   alive = true;
-  targets = [];
-  originalXp = [];
-  additionalXp = xpAmount;
-  particlesArrived = [0, 0, 0];
-  $$('.players .xp').forEach(el => {
-    originalXp.push(toInt(el.innerText));
-    const { x, y, width, height } = el.getBoundingClientRect();
-    targets.push([x, y, x + width, y + height]);
-  });
+  particleType = PARTICLE_XP;
+
+  requestAnimationFrame(render);
+}
+
+function showMoneyParticles(money) {
+  playerCount = $$('.player:not(.hidden)').length;
+  particles = [];
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  particlesPerKey = [];
+
+  for (let p = 0; p < playerCount; p++) {
+    let perKeyCount = {};
+    for (const key in money) {
+      if (money[key] <= 0) continue;
+
+      const originEl = $$('.dialog th .' + key)[p];
+      const { x, y } = originEl.getBoundingClientRect();
+      const targetRect = $$('.player th .' + key)[p].getBoundingClientRect();
+      const dest = [
+        targetRect.x,
+        targetRect.y,
+        targetRect.x + targetRect.width,
+        targetRect.y + targetRect.height,
+        p,
+        key,
+      ];
+
+      const num = Math.min(money[key], 1000);
+      perKeyCount[key] = num;
+      for (let i = 0; i < num; i++) {
+        particles.push(new Particle(x, y, dest, null, originEl));
+      }
+    }
+    particlesPerKey.push(perKeyCount);
+  }
+
+  originalVals = [];
+  additionalVals = money;
+  particlesArrived = [];
+  for (let i = 0; i < playerCount; i++) {
+    const vals = {};
+    const arrived = {};
+    for (const key in money) {
+      vals[key] = toInt($$('.player')[i].$(key).innerText);
+      arrived[key] = 0;
+    }
+    originalVals.push(vals);
+    particlesArrived.push(arrived);
+  }
+
+  time = 0;
+  alive = true;
+  particleType = PARTICLE_MONEY;
 
   requestAnimationFrame(render);
 }
@@ -317,6 +410,19 @@ function showRewardXpDialog(xp) {
   showDialog('xp-reward');
   $$('.dialog .xp').forEach(el => (el.innerText = xp));
   onDialogClose = () => showXpParticles(xp);
+}
+
+function showRewardMoneyDialog(money) {
+  showDialog('money-reward');
+  for (const key in money) {
+    if (money[key] > 0) {
+      $$('.dialog td.' + key).forEach(el => (el.innerText = money[key]));
+    } else {
+      $$('.dialog td.' + key).forEach(el => el.remove());
+      $$('.dialog th .' + key).forEach(el => el.parentElement.remove());
+    }
+  }
+  onDialogClose = () => showMoneyParticles(money);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

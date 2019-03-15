@@ -149,6 +149,13 @@ table {
   color: #58180d;
 }
 
+.money-reward-dialog {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: center;
+}
+
 @keyframes bounce1 {
   0% {
     transform: scale(0);
