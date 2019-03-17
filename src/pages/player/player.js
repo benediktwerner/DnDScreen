@@ -49,6 +49,9 @@ ws.onmessage = function(e) {
         }
       }
     }
+    if (data.map) {
+      updateMapData(data.map);
+    }
   } else if (type == 'reward') {
     if (data.xp > 0) {
       showRewardXpDialog(data.xp);
@@ -125,16 +128,16 @@ function handlePlayerDragEnd() {
   });
 }
 
-////////////
-////////////
-// Canvas //
-////////////
-////////////
+/////////////
+/////////////
+// Effects //
+/////////////
+/////////////
 
 const PARTICLE_XP = 1;
 const PARTICLE_MONEY = 2;
-let canvas;
-let ctx;
+let effectsCanvas;
+let effectsCtx;
 let particles;
 let alive;
 let time;
@@ -160,8 +163,10 @@ class Particle {
     } else {
       const xdiff = x - center.x;
       const ydiff = y - center.y;
-      this.vx = Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
-      this.vy = Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
+      this.vx =
+        Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
+      this.vy =
+        Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
     }
     this.friction = Math.random() * 0.05 + 0.95;
 
@@ -172,6 +177,9 @@ class Particle {
   render(imageData) {
     if (!this.alive) return false;
 
+    const [x1, y1, x2, y2, p, key] = this.dest;
+    let diffX, diffY;
+
     if (this.img === null) {
       for (const [xd, yd] of DIFFS) {
         const pos = (~~this.x + xd + (~~this.y + yd) * imageData.width) * 4;
@@ -181,17 +189,19 @@ class Particle {
         imageData.data[pos + 2] += 0x0d * w;
         imageData.data[pos + 3] = 0xff;
       }
+
+      diffX = (x1 + x2) / 2 - this.x;
+      diffY = (y1 + y2) / 2 - this.y;
     } else {
       const size = Math.max(-(15 / 50) * time + 40, 25);
-      ctx.drawImage(this.img, this.x, this.y, size, size);
+      effectsCtx.drawImage(this.img, this.x, this.y, size, size);
+
+      diffX = x1 - this.x;
+      diffY = y1 - this.y;
     }
 
-    const [x1, y1, x2, y2, p, key] = this.dest;
-
-    const diffX = x1 - this.x;
-    const diffY = y1 - this.y;
     const ampl = Math.sqrt(diffX * diffX + diffY * diffY);
-    const speed = time / 5;
+    const speed = time / 4;
     this.vx *= this.friction;
     this.vy *= this.friction;
     this.x += this.vx + (ampl > 0 ? diffX * (speed / ampl) : 0);
@@ -212,19 +222,24 @@ function render() {
 
   alive = false;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  effectsCtx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
+  const imageData = effectsCtx.getImageData(
+    0,
+    0,
+    effectsCanvas.width,
+    effectsCanvas.height
+  );
 
   for (const p of particles) {
     if (p.render(imageData)) alive = true;
   }
 
-  if (particleType === PARTICLE_XP) ctx.putImageData(imageData, 0, 0);
+  if (particleType === PARTICLE_XP) effectsCtx.putImageData(imageData, 0, 0);
   time += 1;
 
   if (time > 500) {
     alive = false;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    effectsCtx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
   }
 
   for (let i = 0; i < playerCount; i++) {
@@ -235,9 +250,11 @@ function render() {
       const arrivedVals = Math.ceil(additionalVals[key] * arrivedPercent * 1.1);
 
       if (key === 'xp')
-        $$('.player .xp')[i].innerText = originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+        $$('.player .xp')[i].innerText =
+          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
       else {
-        $$('.player td.' + key)[i].innerText = originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+        $$('.player td.' + key)[i].innerText =
+          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
       }
     }
   }
@@ -256,12 +273,12 @@ function showXpParticles(xpAmount) {
   playerCount = $$('.player:not(.hidden)').length;
   particles = [];
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  effectsCanvas.width = window.innerWidth;
+  effectsCanvas.height = window.innerHeight;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = '4rem Requiem';
-  ctx.textAlign = 'center';
+  effectsCtx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
+  effectsCtx.font = '4rem Requiem';
+  effectsCtx.textAlign = 'center';
 
   const baselinePadding = getBaselinePadding($('.dialog .xp'));
   particlesPerKey = [];
@@ -273,17 +290,17 @@ function showXpParticles(xpAmount) {
     const width = Math.floor(rect.width);
     const height = Math.floor(rect.height);
 
-    ctx.save();
-    if (p == 0) ctx.translate(x + width / 2, y + height - baselinePadding);
-    else if (p == 1) ctx.translate(x + width - baselinePadding, y + height / 2);
-    else ctx.translate(x + width / 2, y + baselinePadding);
-    ctx.rotate((-p * Math.PI) / 2);
+    effectsCtx.save();
+    if (p == 0) effectsCtx.translate(x + width / 2, y + height - baselinePadding);
+    else if (p == 1) effectsCtx.translate(x + width - baselinePadding, y + height / 2);
+    else effectsCtx.translate(x + width / 2, y + baselinePadding);
+    effectsCtx.rotate((-p * Math.PI) / 2);
 
-    ctx.fillText(xpAmount, 0, 0);
-    ctx.restore();
+    effectsCtx.fillText(xpAmount, 0, 0);
+    effectsCtx.restore();
 
-    const data = ctx.getImageData(x, y, width, height).data;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const data = effectsCtx.getImageData(x, y, width, height).data;
+    effectsCtx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
 
     const targetRect = $$('.player .xp')[p].getBoundingClientRect();
     const dest = [
@@ -327,8 +344,8 @@ function showMoneyParticles(money) {
   playerCount = $$('.player:not(.hidden)').length;
   particles = [];
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  effectsCanvas.width = window.innerWidth;
+  effectsCanvas.height = window.innerHeight;
   particlesPerKey = [];
 
   for (let p = 0; p < playerCount; p++) {
@@ -390,7 +407,9 @@ function showDialog(name) {
 
     const template = $('#' + name + '-dialog-template');
     if (template === null) {
-      console.error(`No template for '${name}' dialog. It should be called ${name}-dialog-template.`);
+      console.error(
+        `No template for '${name}' dialog. It should be called ${name}-dialog-template.`
+      );
       return;
     }
 
@@ -428,6 +447,151 @@ function showRewardMoneyDialog(money) {
   onDialogClose = () => showMoneyParticles(money);
 }
 
+/////////
+/////////
+// Map //
+/////////
+/////////
+
+let mapCanvas;
+let mapCtx;
+let dragging = false;
+let last_x = 0;
+let last_y = 0;
+let last_touches;
+let map = {
+  bg_image: new Image(),
+  offset_x: 0,
+  offset_y: 0,
+  zoom: 1,
+  grid_size: 20,
+  grid_x: 0,
+  grid_y: 0,
+  grid_opacity: 20,
+  lines: [],
+};
+
+function updateMapData(data) {
+  map.lines = data.lines;
+  map.bg_image.src = data.bg_image;
+  requestAnimationFrame(renderMap);
+}
+
+function drawLine(x1, y1, x2, y2) {
+  mapCtx.moveTo(x1, y1);
+  mapCtx.lineTo(x2, y2);
+}
+
+function drawGrid() {
+  const SIZE = map.grid_size;
+  const SIZE_ZOOM = SIZE * map.zoom;
+  const NUM_X = Math.ceil(mapCanvas.width / map.zoom / SIZE) + 2;
+  const NUM_Y = Math.ceil(mapCanvas.height / map.zoom / SIZE) + 2;
+
+  mapCtx.save();
+  mapCtx.translate(
+    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM + map.grid_x * map.zoom,
+    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM + map.grid_y * map.zoom
+  );
+  mapCtx.scale(map.zoom, map.zoom);
+  mapCtx.beginPath();
+
+  for (let i = 1; i < NUM_X; i++) drawLine(i * SIZE, 0, i * SIZE, NUM_Y * SIZE);
+  for (let i = 1; i < NUM_Y; i++) drawLine(0, i * SIZE, NUM_X * SIZE, i * SIZE);
+
+  mapCtx.strokeStyle = `rgba(0,0,0,${map.grid_opacity / 100})`;
+  mapCtx.stroke();
+  mapCtx.restore();
+}
+
+function renderMap() {
+  mapCtx.save();
+  mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+  mapCtx.translate(map.offset_x, map.offset_y);
+  mapCtx.scale(map.zoom, map.zoom);
+
+  if (map.bg_image.src !== null) {
+    mapCtx.drawImage(map.bg_image, 0, 0);
+  }
+  mapCtx.beginPath();
+  for (let line of map.lines) {
+    drawLine(...line);
+  }
+  mapCtx.stroke();
+
+  mapCtx.restore();
+  drawGrid();
+}
+function canvas_mousedown(event) {
+  event.preventDefault();
+  dragging = true;
+  last_x = event.pageX || event.touches[0].pageX;
+  last_y = event.pageY || event.touches[0].pageY;
+  last_touches = event.touches;
+}
+
+function canvas_mouseup(event) {
+  event.preventDefault();
+  dragging = false;
+}
+
+function canvas_mousemove(event) {
+  if (!dragging) return;
+  event.preventDefault();
+
+  let new_x = last_x,
+    new_y = last_y;
+
+  if (event.type === 'touchmove') {
+    if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
+      const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
+      const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
+      const last_diff = Math.sqrt(
+        last_diff_x * last_diff_x + last_diff_y * last_diff_y
+      );
+      last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
+      last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
+
+      const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
+      const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
+      const curr_diff = Math.sqrt(
+        curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
+      );
+      new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+      new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+
+      const zoom_change = Math.pow(curr_diff / last_diff, 2);
+      map.zoom *= zoom_change;
+
+      map.offset_x -=
+        ((new_x - mapCanvas.offsetLeft - map.offset_x) * (zoom_change - 1)) /
+        zoom_change;
+      map.offset_y -=
+        ((new_y - mapCanvas.offsetTop - map.offset_y) * (zoom_change - 1)) /
+        zoom_change;
+    } else {
+      new_x = event.touches[0].pageX;
+      new_y = event.touches[0].pageY;
+    }
+    last_touches = event.touches;
+  } else {
+    new_x = event.pageX;
+    new_y = event.pageY;
+  }
+  map.offset_x += new_x - last_x;
+  map.offset_y += new_y - last_y;
+  last_x = new_x;
+  last_y = new_y;
+
+  requestAnimationFrame(renderMap);
+}
+
+/////////////////////
+/////////////////////
+// Event Listeners //
+/////////////////////
+/////////////////////
+
 document.addEventListener('DOMContentLoaded', function() {
   $$('.player').forEach(p => {
     p.entercounter = 0;
@@ -444,6 +608,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.target == dialog_backdrop) closeDialog();
   });
 
-  canvas = $('canvas');
-  ctx = canvas.getContext('2d');
+  effectsCanvas = $('#effects');
+  effectsCtx = effectsCanvas.getContext('2d');
+
+  mapCanvas = $('#map');
+  mapCtx = mapCanvas.getContext('2d');
+
+  mapCanvas.addEventListener('mousedown', canvas_mousedown);
+  mapCanvas.addEventListener('touchstart', canvas_mousedown);
+  mapCanvas.addEventListener('mouseup', canvas_mouseup);
+  mapCanvas.addEventListener('touchend', canvas_mouseup);
+  mapCanvas.addEventListener('mousemove', canvas_mousemove);
+  mapCanvas.addEventListener('touchmove', canvas_mousemove);
+
+  $('#grid-opacity').addEventListener('input', e => {
+    map.grid_opacity = toInt(e.target.value);
+    requestAnimationFrame(renderMap);
+  });
+
+  const { width, height } = mapCanvas.getBoundingClientRect();
+  mapCanvas.width = width;
+  mapCanvas.height = height;
+
+  map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });

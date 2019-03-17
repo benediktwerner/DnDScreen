@@ -28,6 +28,10 @@ h4 input {
   font-size: inherit;
 }
 
+.margin-bottom {
+  margin-bottom: 20px;
+}
+
 .currency {
   width: 25px;
   filter: url(#drop-shadow);
@@ -75,7 +79,8 @@ button:focus {
   grid-template-columns: 2fr 6fr;
 }
 
-input {
+input,
+select {
   display: block;
   width: 100%;
   height: calc(1.5em + 0.75rem + 2px);
@@ -89,7 +94,8 @@ input {
   background-color: transparent;
   transition: border-color 150ms ease-in-out;
 }
-input:focus {
+input:focus,
+select:focus {
   border-color: #58180d;
   outline: 0;
 }
@@ -126,4 +132,72 @@ label {
 
 .fix-font {
   font-family: Arial;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  height: 35px;
+  background: #decda3;
+  box-shadow: inset 0 0 5px 0;
+  transition: opacity 0.2s;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 35px;
+  height: 35px;
+  background: #9b2a17;
+  box-shadow: 0 0 3px 0;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  display: block;
+  width: 60px;
+  height: 34px;
+  padding-left: 70px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #decda3;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  box-shadow: inset 0 0 5px 0;
+  margin-right: 10px;
+}
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 34px;
+  width: 30px;
+  left: 0;
+  bottom: 0;
+  background-color: #8b2514;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  box-shadow: 1px 0px 5px 0 inset;
+}
+input:checked + .slider:before {
+  bottom: -1px;
+  height: 36px;
+  width: 34px;
+  box-shadow: 0 0 3px 0;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
 }

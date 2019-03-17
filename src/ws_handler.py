@@ -5,29 +5,11 @@ from typing import List
 
 import aiohttp
 
-from data import Data
-
-DATA_DIR = "data"
-DATA_FILE = os.path.join(DATA_DIR, "data.json")
-BACKUP_FILE = os.path.join(DATA_DIR, "data.bkp.json")
+from data import Data, Map
 
 
-def _load_data():
-    if os.path.isfile(DATA_FILE):
-        with open(DATA_FILE) as f:
-            return Data(json.load(f))
-    return Data()
-
-
-def _dump_data(data, backup=False):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    file_name = BACKUP_FILE if backup else DATA_FILE
-    with open(file_name, "w") as f:
-        return json.dump(data.to_json(), f)
-
-
-data = _load_data()
-atexit.register(lambda: _dump_data(data, backup=True))
+data = Data.load()
+atexit.register(lambda: data.dump(backup=True))
 
 player_websockets: List[aiohttp.web.WebSocketResponse] = []
 dm_websockets: List[aiohttp.web.WebSocketResponse] = []
@@ -67,7 +49,7 @@ async def _handle_init(ws):
 
 
 async def _handle_save(ws):
-    _dump_data(data)
+    data.dump()
     await send(ws, "Gespeichert")
 
 
@@ -92,6 +74,23 @@ async def _handle_reward(ws, **rewards):
     await send_players({"type": "reward", "data": rewards})
 
 
+async def _handle_update_map(ws, **values):
+    data.update_map(values)
+    await send_players(data)
+
+
+async def _handle_load_map(ws, name):
+    if data.load_map(name):
+        await send_all(data)
+    else:
+        await send(ws, "Karte nicht gefunden")
+
+
+async def _handle_save_map(ws, name):
+    data.save_map(name)
+    await send(ws, "Karte gespeichert")
+
+
 DM_HANDLERS = {
     "init": _handle_init,
     "save": _handle_save,
@@ -99,6 +98,9 @@ DM_HANDLERS = {
     "add-player": _handle_add_player,
     "update-player": _handle_update_player,
     "reward": _handle_reward,
+    "update-map": _handle_update_map,
+    "load-map": _handle_load_map,
+    "save-map": _handle_save_map,
 }
 
 

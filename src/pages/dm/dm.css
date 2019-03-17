@@ -1,3 +1,7 @@
+body {
+  background-image: url('/img/pergament.jpg');
+}
+
 .container {
   height: 100%;
   display: grid;
@@ -5,12 +9,15 @@
 }
 
 .sidebar {
-  background-image: url('/img/pergament.jpg');
   padding: 10px;
   position: relative;
+  box-shadow: 0 0 20px 4px #333;
 }
 .sidebar button {
   margin-top: 10px;
+}
+.sidebar h2:not(:first-child) {
+  margin-top: 30px;
 }
 
 .banner-img {
@@ -132,4 +139,17 @@ table input {
   position: absolute;
   right: 5px;
   top: -55px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.map-inputs {
+  display: flex;
+  flex-direction: row;
+}
+.map-inputs input {
+  margin: 0 5px;
 }

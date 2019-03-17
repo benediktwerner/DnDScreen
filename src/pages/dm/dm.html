@@ -50,9 +50,7 @@
         </div>
       </div>
 
-      <div>
-        Test
-      </div>
+      <canvas> </canvas>
 
       <div class="sidebar">
         <h2>Aktionen</h2>
@@ -60,6 +58,36 @@
         <button onclick="send('save')">Speichern</button>
         <button onclick="confirm(() => send('long-rest'))">Lange Rast</button>
         <button onclick="showRewardsDialog()">Belohnung</button>
+
+        <h2>Karte</h2>
+        <select id="map-bg" class="margin-bottom">
+          <option
+            class="default"
+            value="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+            >Kein Hintergrund</option
+          >
+        </select>
+        <div class="map-inputs margin-bottom">
+          <input id="grid-x" type="number" value="0" />
+          <input id="grid-y" type="number" value="0" />
+          <input id="grid-size" type="number" value="20" />
+        </div>
+        <input
+          id="grid-opacity"
+          class="margin-bottom"
+          type="range"
+          min="0"
+          max="100"
+          value="20"
+        />
+        <label class="switch">
+          <input id="drawing" type="checkbox" />
+          <span class="slider"></span>
+          Zeichnen
+        </label>
+        <button onclick="showLoadMapDialog()">Karte laden</button>
+        <button onclick="showDialog('save-map')">Speichern</button>
+
         <div class="messages">
           <button type="button" onclick="clearMessages()" hidden>X</button>
           <div class="messages-container"></div>
@@ -211,7 +239,9 @@
       <div class="player" onclick="showPlayerDialog(event)">
         <h3>
           <span class="name">Name</span> - <span class="cls">Klasse</span>
-          <span style="float: right">lvl <span class="level">2</span> - <span class="xp">500</span> xp</span>
+          <span style="float: right"
+            >lvl <span class="level">2</span> - <span class="xp">500</span> xp</span
+          >
         </h3>
         <table class="player-table stats-table">
           <tr>
@@ -236,6 +266,18 @@
           </tr>
         </table>
       </div>
+    </template>
+
+    <template id="load-map-dialog-template">
+      <h2>Karte laden</h2>
+      <select class="map-name"></select>
+      <button class="action" type="button" onclick="loadMap()">Laden</button>
+    </template>
+
+    <template id="save-map-dialog-template">
+      <h2>Karte speichern</h2>
+      <input class="map-name" />
+      <button class="action" type="button" onclick="saveMap()">Speichern</button>
     </template>
 
     <!-- Scripts -->

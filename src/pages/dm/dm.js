@@ -29,13 +29,17 @@ function openWebsocket() {
   ws = new WebSocket(`ws://${window.location.host}/dm_socket`);
 
   ws.onerror = onWebsocketError;
-  ws.onopen = () => send('init');
+  ws.onopen = onWebsocketInit;
   ws.onmessage = onWebsocketMessage;
 }
 
 function onWebsocketError(e) {
   e.target.close();
   openWebsocket();
+}
+
+function onWebsocketInit() {
+  send('init');
 }
 
 function onWebsocketMessage(e) {
@@ -68,6 +72,28 @@ function onWebsocketMessage(e) {
         $('.total').$(key).innerText = money[key];
       }
     }
+    if (data.map_images) {
+      $$('#map-bg option:not(.default)').forEach(el => el.remove());
+
+      for (let bg of data.map_images) {
+        const el = document.createElement('option');
+        el.value = '/img/maps/' + bg;
+        el.innerText = bg
+          .split('.')
+          .slice(0, -1)
+          .join(' ');
+        $('#map-bg').appendChild(el);
+      }
+    }
+    if (data.map) {
+      map.lines = data.map.lines;
+      map.bg_image.src = data.map.bg_image;
+      $('#map-bg').value = data.map.bg_image;
+      requestAnimationFrame(renderMap);
+    }
+    if (data.maps) {
+      maps = data.maps;
+    }
     closeDialog();
   }
 }
@@ -80,6 +106,12 @@ function send(type, data) {
     console.log('Sending: ' + msg);
     ws.send(msg);
   }
+}
+
+function send_map(bg_image_url) {
+  const data = { lines: map.lines };
+  if (bg_image_url) data.bg_image = bg_image_url;
+  send('update-map', data);
 }
 
 function addMessage(msg) {
@@ -111,7 +143,9 @@ function showDialog(name) {
 
   const template = $('#' + name + '-dialog-template');
   if (template === null) {
-    console.error(`No template for '${name}' dialog. It should be called ${name}-dialog-template.`);
+    console.error(
+      `No template for '${name}' dialog. It should be called ${name}-dialog-template.`
+    );
     return;
   }
 
@@ -134,7 +168,17 @@ function addPlayer() {
 }
 
 function updatePlayer() {
-  const keys = ['hp', 'hp_total', 'hitdice', 'hitdice_total', 'copper', 'silver', 'gold', 'electrum', 'platin'];
+  const keys = [
+    'hp',
+    'hp_total',
+    'hitdice',
+    'hitdice_total',
+    'copper',
+    'silver',
+    'gold',
+    'electrum',
+    'platin',
+  ];
   let values = {};
   for (const key of keys) {
     values[key] = toInt($('.dialog .total').$(key).value);
@@ -144,7 +188,7 @@ function updatePlayer() {
   values.name = $('.dialog .name').value;
   values.cls = $('.dialog .cls').value;
 
-  data = {
+  let data = {
     id: toInt(
       $('.dialog .player-id')
         .value.match(/\d+/g)
@@ -179,7 +223,17 @@ function showPlayerDialog(e) {
   $('.dialog .cls').value = target.$('cls').innerText;
   $('.dialog .xp').value = target.$('xp').innerText;
 
-  const keys = ['hp', 'hp_total', 'hitdice', 'hitdice_total', 'copper', 'silver', 'gold', 'electrum', 'platin'];
+  const keys = [
+    'hp',
+    'hp_total',
+    'hitdice',
+    'hitdice_total',
+    'copper',
+    'silver',
+    'gold',
+    'electrum',
+    'platin',
+  ];
   for (const key of keys) {
     const val = toInt(target.$(key).innerText);
     $('.dialog .current').$(key).innerText = val;
@@ -194,7 +248,9 @@ function showPlayerDialog(e) {
 
 function giveReward() {
   const values = {};
-  $$('.dialog .per-person input').forEach(e => (values[e.classList[0]] = toInt(e.value)));
+  $$('.dialog .per-person input').forEach(
+    e => (values[e.classList[0]] = toInt(e.value))
+  );
   closeDialog();
   send('reward', values);
 }
@@ -228,10 +284,302 @@ function confirm(action) {
   });
 }
 
+/////////
+/////////
+// Map //
+/////////
+/////////
+
+let canvas;
+let ctx;
+let dragging = false;
+let drawing = false;
+let last_x = 0;
+let last_y = 0;
+let mouse_x, mouse_y;
+let last_touches;
+let maps = [];
+let map = {
+  bg_image: new Image(),
+  offset_x: 0,
+  offset_y: 0,
+  zoom: 1,
+  grid_size: 20,
+  grid_x: 0,
+  grid_y: 0,
+  grid_opacity: 20,
+  lines: [],
+};
+
+function drawLine(x1, y1, x2, y2) {
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+}
+
+function drawGrid() {
+  const SIZE = map.grid_size;
+  const SIZE_ZOOM = SIZE * map.zoom;
+  const NUM_X = Math.ceil(canvas.width / map.zoom / SIZE) + 2;
+  const NUM_Y = Math.ceil(canvas.height / map.zoom / SIZE) + 2;
+
+  ctx.save();
+  ctx.translate(
+    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM + map.grid_x * map.zoom,
+    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM + map.grid_y * map.zoom
+  );
+  ctx.scale(map.zoom, map.zoom);
+  ctx.beginPath();
+
+  for (let i = 1; i < NUM_X; i++) drawLine(i * SIZE, 0, i * SIZE, NUM_Y * SIZE);
+  for (let i = 1; i < NUM_Y; i++) drawLine(0, i * SIZE, NUM_X * SIZE, i * SIZE);
+
+  ctx.strokeStyle = `rgba(0,0,0,${map.grid_opacity / 100})`;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function align_to_grid(val) {
+  return Math.round(val / map.grid_size) * map.grid_size;
+}
+
+function renderMap() {
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.translate(map.offset_x, map.offset_y);
+  ctx.scale(map.zoom, map.zoom);
+
+  if (map.bg_image.src !== null) {
+    ctx.drawImage(map.bg_image, 0, 0);
+  }
+  ctx.beginPath();
+  for (let line of map.lines) {
+    drawLine(...line);
+  }
+  if (drawing && (last_x !== 0 || last_y !== 0))
+    drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
+  ctx.stroke();
+
+  ctx.restore();
+  drawGrid();
+}
+
+function canvas_mousedown(event) {
+  if (drawing) return;
+  event.preventDefault();
+  dragging = true;
+  last_x = event.pageX || event.touches[0].pageX;
+  last_y = event.pageY || event.touches[0].pageY;
+  last_touches = event.touches;
+}
+
+function canvas_mouseup(event) {
+  if (drawing) return;
+  event.preventDefault();
+  dragging = false;
+}
+
+function to_canvas_x(x) {
+  return (x - map.offset_x) / map.zoom;
+}
+
+function to_canvas_y(y) {
+  return (y - map.offset_y) / map.zoom;
+}
+
+function canvas_click(event) {
+  if (!drawing) return;
+  event.preventDefault();
+
+  if (last_x === 0 && last_y === 0) {
+    last_x = align_to_grid(to_canvas_x(event.offsetX));
+    last_y = align_to_grid(to_canvas_y(event.offsetY));
+  } else {
+    map.lines.push([
+      last_x,
+      last_y,
+      align_to_grid(to_canvas_x(event.offsetX)),
+      align_to_grid(to_canvas_y(event.offsetY)),
+    ]);
+    send_map();
+    last_x = last_y = 0;
+  }
+  requestAnimationFrame(renderMap);
+}
+
+function canvas_rightclick(event) {
+  event.preventDefault();
+  if (!drawing) return;
+
+  if (last_x === 0 && last_y === 0) {
+    last_x = align_to_grid(to_canvas_x(event.offsetX));
+    last_y = align_to_grid(to_canvas_y(event.offsetY));
+  } else {
+    const curr_x = align_to_grid(to_canvas_x(event.offsetX));
+    const curr_y = align_to_grid(to_canvas_y(event.offsetY));
+    for (let i = 0; i < map.lines.length; i++) {
+      const [x1, y1, x2, y2] = map.lines[i];
+      if (
+        (last_x == x1 || last_x == x2) &&
+        (last_y == y1 || last_y == y2) &&
+        (curr_x == x1 || curr_x == x2) &&
+        (curr_y == y1 || curr_y == y2)
+      ) {
+        map.lines.splice(i, 1);
+        i--;
+      }
+    }
+    send_map();
+    last_x = last_y = 0;
+  }
+  requestAnimationFrame(renderMap);
+}
+
+function canvas_keyup(event) {
+  event.preventDefault();
+  if (!drawing) return;
+  if (event.key === 'Escape') {
+    last_x = last_y = 0;
+    requestAnimationFrame(renderMap);
+  }
+}
+
+function canvas_mousemove(event) {
+  if (drawing) {
+    mouse_x = event.offsetX;
+    mouse_y = event.offsetY;
+    requestAnimationFrame(renderMap);
+    return;
+  }
+  if (!dragging) return;
+  event.preventDefault();
+
+  let new_x = last_x,
+    new_y = last_y;
+
+  if (event.type === 'touchmove') {
+    if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
+      const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
+      const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
+      const last_diff = Math.sqrt(
+        last_diff_x * last_diff_x + last_diff_y * last_diff_y
+      );
+      last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
+      last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
+
+      const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
+      const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
+      const curr_diff = Math.sqrt(
+        curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
+      );
+      new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+      new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+
+      const zoom_change = Math.pow(curr_diff / last_diff, 2);
+      map.zoom *= zoom_change;
+
+      map.offset_x -=
+        ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
+      map.offset_y -=
+        ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
+    } else {
+      new_x = event.touches[0].pageX;
+      new_y = event.touches[0].pageY;
+    }
+    last_touches = event.touches;
+  } else {
+    new_x = event.pageX;
+    new_y = event.pageY;
+  }
+  map.offset_x += new_x - last_x;
+  map.offset_y += new_y - last_y;
+  last_x = new_x;
+  last_y = new_y;
+
+  requestAnimationFrame(renderMap);
+}
+
+function saveMap() {
+  if ($('.dialog .map-name').value) {
+    send('save-map', { name: $('.dialog .map-name').value });
+    closeDialog();
+  }
+}
+
+function showLoadMapDialog() {
+  showDialog('load-map');
+  for (const map of maps) {
+    const optionEl = document.createElement('option');
+    optionEl.value = map;
+    optionEl.innerText = map
+      .split('.')
+      .slice(0, -1)
+      .join(' ');
+    $('.dialog .map-name').appendChild(optionEl);
+  }
+}
+
+function loadMap() {
+  if ($('.dialog .map-name').value) {
+    send('load-map', { name: $('.dialog .map-name').value });
+    closeDialog();
+  }
+}
+
+/////////////////////
+/////////////////////
+// Event Listeners //
+/////////////////////
+/////////////////////
+
 document.addEventListener('DOMContentLoaded', function() {
   dialog_backdrop = $('.dialog-backdrop');
   dialog_backdrop.addEventListener('click', function(e) {
     if (e.target == dialog_backdrop) closeDialog();
   });
+
+  canvas = $('canvas');
+  ctx = canvas.getContext('2d');
+
+  const { width, height } = canvas.getBoundingClientRect();
+  canvas.width = width;
+  canvas.height = height;
+
+  canvas.addEventListener('mousedown', canvas_mousedown);
+  canvas.addEventListener('touchstart', canvas_mousedown);
+  canvas.addEventListener('mouseup', canvas_mouseup);
+  canvas.addEventListener('touchend', canvas_mouseup);
+  canvas.addEventListener('mousemove', canvas_mousemove);
+  canvas.addEventListener('touchmove', canvas_mousemove);
+  canvas.addEventListener('contextmenu', canvas_rightclick);
+  canvas.addEventListener('click', canvas_click);
+  window.addEventListener('keyup', canvas_keyup);
+
+  $('#map-bg').addEventListener('change', e => {
+    map.bg_image.src = e.target.value;
+    send_map(e.target.value);
+  });
+  $('#grid-size').addEventListener('input', e => {
+    if (e.target.value && parseFloat(e.target.value) >= 10)
+      map.grid_size = parseFloat(e.target.value);
+    requestAnimationFrame(renderMap);
+  });
+  $('#grid-x').addEventListener('input', e => {
+    if (e.target.value) map.grid_x = parseFloat(e.target.value);
+    requestAnimationFrame(renderMap);
+  });
+  $('#grid-y').addEventListener('input', e => {
+    if (e.target.value) map.grid_y = parseFloat(e.target.value);
+    requestAnimationFrame(renderMap);
+  });
+  $('#grid-opacity').addEventListener('input', e => {
+    map.grid_opacity = toInt(e.target.value);
+    requestAnimationFrame(renderMap);
+  });
+  $('#drawing').addEventListener('change', () => {
+    drawing = !drawing;
+    last_x = last_y = 0;
+  });
+
+  map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });
 window.addEventListener('load', openWebsocket);

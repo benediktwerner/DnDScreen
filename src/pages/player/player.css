@@ -2,7 +2,7 @@ body {
   background-image: url('/img/pergament.jpg');
 }
 
-canvas {
+canvas#effects {
   position: fixed;
   top: 0;
   right: 0;
@@ -208,4 +208,21 @@ table {
   100% {
     transform: translateY(100%) scale(-1);
   }
+}
+
+#map {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+#grid-opacity {
+  position: fixed;
+  top: calc(50vh - 17px);
+  right: -64px;
+  bottom: calc(50vh - 17px);
+  width: calc(100vh - 2 * 180px);
+  transform: rotate(-90deg);
 }
