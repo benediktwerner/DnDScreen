@@ -22,10 +22,11 @@ function toInt(val) {
 let ws;
 
 function openWebsocket() {
-  const pwd = btoa(prompt('Password:'))
-    .replace('==', '')
-    .replace('=', '');
-  ws = new WebSocket(`ws://${window.location.host}/dm_socket?password=${pwd}`);
+  // const pwd = btoa(prompt('Password:'))
+  //   .replace('==', '')
+  //   .replace('=', '');
+  // ws = new WebSocket(`ws://${window.location.host}/dm_socket?password=${pwd}`);
+  ws = new WebSocket(`ws://${window.location.host}/dm_socket`);
 
   ws.onerror = onWebsocketError;
   ws.onopen = () => send('init');
