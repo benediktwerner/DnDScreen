@@ -2,6 +2,8 @@
 
 import base64
 import os
+import sys
+import webbrowser
 
 import aiohttp
 from aiohttp import web
@@ -74,4 +76,8 @@ app.add_routes(
         web.static("/", "static/icons"),
     ]
 )
+
+if "-o" in sys.argv:
+    webbrowser.open("http://localhost:8080")
+
 web.run_app(app)
