@@ -56,6 +56,8 @@ ws.onmessage = function(e) {
       delete data.xp;
       showRewardMoneyDialog(data);
     }
+  } else {
+    alert(`Invalid message type: ${type}\n${JSON.stringify(data)}`);
   }
 };
 
