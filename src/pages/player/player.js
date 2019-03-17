@@ -474,6 +474,9 @@ let map = {
 function updateMapData(data) {
   map.lines = data.lines;
   map.bg_image.src = data.bg_image;
+  map.grid_size = data.grid_size;
+  map.grid_x = data.grid_x;
+  map.grid_y = data.grid_y;
   requestAnimationFrame(renderMap);
 }
 

@@ -88,7 +88,13 @@ function onWebsocketMessage(e) {
     if (data.map) {
       map.lines = data.map.lines;
       map.bg_image.src = data.map.bg_image;
+      map.grid_size = data.map.grid_size;
+      map.grid_x = data.map.grid_x;
+      map.grid_y = data.map.grid_y;
       $('#map-bg').value = data.map.bg_image;
+      $("#grid-size").value = map.grid_size;
+      $("#grid-x").value = map.grid_x;
+      $("#grid-y").value = map.grid_y;
       requestAnimationFrame(renderMap);
     }
     if (data.maps) {
@@ -109,7 +115,12 @@ function send(type, data) {
 }
 
 function send_map(bg_image_url) {
-  const data = { lines: map.lines };
+  const data = {
+    lines: map.lines,
+    grid_size: map.grid_size,
+    grid_x: map.grid_x,
+    grid_y: map.grid_y,
+  };
   if (bg_image_url) data.bg_image = bg_image_url;
   send('update-map', data);
 }
@@ -561,14 +572,17 @@ document.addEventListener('DOMContentLoaded', function() {
   $('#grid-size').addEventListener('input', e => {
     if (e.target.value && parseFloat(e.target.value) >= 10)
       map.grid_size = parseFloat(e.target.value);
+    send_map();
     requestAnimationFrame(renderMap);
   });
   $('#grid-x').addEventListener('input', e => {
     if (e.target.value) map.grid_x = parseFloat(e.target.value);
+    send_map();
     requestAnimationFrame(renderMap);
   });
   $('#grid-y').addEventListener('input', e => {
     if (e.target.value) map.grid_y = parseFloat(e.target.value);
+    send_map();
     requestAnimationFrame(renderMap);
   });
   $('#grid-opacity').addEventListener('input', e => {

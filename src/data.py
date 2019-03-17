@@ -168,12 +168,27 @@ class Map:
     def __init__(self, json):
         self.bg_image = json.get("bg_image", TRANSPARENT_BG)
         self.lines = json.get("lines", [])
+        self.grid_size = json.get("grid_size", 20)
+        self.grid_x = json.get("grid_x", 0)
+        self.grid_y = json.get("grid_y", 0)
 
     def update(self, data):
         if "lines" in data:
             self.lines = data["lines"]
         if "bg_image" in data:
             self.bg_image = data["bg_image"]
+        if "grid_size" in data:
+            self.grid_size = data["grid_size"]
+        if "grid_x" in data:
+            self.grid_x = data["grid_x"]
+        if "grid_y" in data:
+            self.grid_y = data["grid_y"]
 
     def to_json(self):
-        return {"bg_image": self.bg_image, "lines": self.lines}
+        return {
+            "bg_image": self.bg_image,
+            "lines": self.lines,
+            "grid_size": self.grid_size,
+            "grid_x": self.grid_x,
+            "grid_y": self.grid_y,
+        }
