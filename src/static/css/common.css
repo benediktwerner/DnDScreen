@@ -139,8 +139,8 @@ input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   border: none;
-  height: 35px;
-  background: #decda3;
+  height: 30px;
+  background: rgba(222, 205, 163, 0.7);
   box-shadow: inset 0 0 5px 0;
   transition: opacity 0.2s;
 }
