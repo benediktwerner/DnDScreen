@@ -28,9 +28,9 @@ ws.onopen = function() {
 ws.onmessage = function(e) {
   const { data, type } = JSON.parse(e.data);
 
-  if (type == 'msg') {
+  if (type === 'msg') {
     alert(data);
-  } else if (type == 'data') {
+  } else if (type === 'data') {
     if (data.players) {
       for (const i of [0, 1, 2]) {
         const p = data.players[i];
@@ -43,7 +43,7 @@ ws.onmessage = function(e) {
 
         pEl.classList.remove('hidden');
         for (const key in p) {
-          if (key == 'cls') continue;
+          if (key === 'cls') continue;
           const el = pEl.$(key);
           if (!el.classList.contains('currency')) el.innerText = p[key];
         }
@@ -52,7 +52,7 @@ ws.onmessage = function(e) {
     if (data.map) {
       updateMapData(data.map);
     }
-  } else if (type == 'reward') {
+  } else if (type === 'reward') {
     if (data.xp > 0) {
       showRewardXpDialog(data.xp);
     } else {
@@ -193,7 +193,7 @@ class Particle {
     if (this.img === null) {
       for (const [xd, yd] of DIFFS) {
         const pos = (~~this.x + xd + (~~this.y + yd) * imageData.width) * 4;
-        const w = xd == 0 && yd == 0 ? 1 : Math.exp(time / 100) - 1;
+        const w = xd === 0 && yd === 0 ? 1 : Math.exp(time / 100) - 1;
         imageData.data[pos] += 0x58 * w;
         imageData.data[pos + 1] += 0x18 * w;
         imageData.data[pos + 2] += 0x0d * w;
@@ -301,8 +301,8 @@ function showXpParticles(xpAmount) {
     const height = Math.floor(rect.height);
 
     effectsCtx.save();
-    if (p == 0) effectsCtx.translate(x + width / 2, y + height - baselinePadding);
-    else if (p == 1) effectsCtx.translate(x + width - baselinePadding, y + height / 2);
+    if (p === 0) effectsCtx.translate(x + width / 2, y + height - baselinePadding);
+    else if (p === 1) effectsCtx.translate(x + width - baselinePadding, y + height / 2);
     else effectsCtx.translate(x + width / 2, y + baselinePadding);
     effectsCtx.rotate((-p * Math.PI) / 2);
 
@@ -616,7 +616,7 @@ function canvas_click(event) {
       break;
     }
   }
-  if (new_selection == -1) {
+  if (new_selection === -1) {
     if (selected_unit >= 0 && selected_unit < map.units.length) {
       map.units[selected_unit].x = x;
       map.units[selected_unit].y = y;
@@ -624,7 +624,7 @@ function canvas_click(event) {
     }
     selected_unit = -1;
   } else {
-    selected_unit = new_selection == selected_unit ? -1 : new_selection;
+    selected_unit = new_selection === selected_unit ? -1 : new_selection;
   }
   requestAnimationFrame(renderMap);
 }
@@ -637,7 +637,7 @@ function canvas_mousemove(event) {
     new_y = last_y;
 
   if (event.type === 'touchmove') {
-    if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
+    if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
       const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
       const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
       const last_diff = Math.sqrt(
@@ -709,7 +709,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   dialog_backdrop = $('.dialog-backdrop');
   dialog_backdrop.addEventListener('click', function(e) {
-    if (e.target == dialog_backdrop) closeDialog();
+    if (e.target === dialog_backdrop) closeDialog();
   });
 
   effectsCanvas = $('#effects');

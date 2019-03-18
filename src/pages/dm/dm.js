@@ -45,9 +45,9 @@ function onWebsocketInit() {
 function onWebsocketMessage(e) {
   const { data, type } = JSON.parse(e.data);
 
-  if (type == 'msg') {
+  if (type === 'msg') {
     addMessage(data);
-  } else if (type == 'data') {
+  } else if (type === 'data') {
     if (data.players) {
       let money = { copper: 0, silver: 0, gold: 0, electrum: 0, platin: 0 };
 
@@ -219,7 +219,7 @@ function onPlayerDialogChange(e) {
   const val = toInt(e.target.value);
   const currVal = toInt($('.dialog .current').$(key).innerText);
 
-  if (row == 'diff') {
+  if (row === 'diff') {
     $('.dialog .total').$(key).value = currVal + val;
   } else {
     $('.dialog .diff').$(key).value = val - currVal;
@@ -274,7 +274,7 @@ function onRewardsDialogChange(e) {
   const val = toInt(e.target.value);
   const playerCount = $$('.player').length;
 
-  if (row == 'per-person') {
+  if (row === 'per-person') {
     $('.dialog .total').$(key).value = val * playerCount;
   } else {
     $('.dialog .per-person').$(key).value = Math.round(val / playerCount);
@@ -486,7 +486,7 @@ function canvas_click(event) {
         break;
       }
     }
-    if (new_selection == -1) {
+    if (new_selection === -1) {
       if (selected_unit >= 0 && selected_unit < map.units.length) {
         map.units[selected_unit].x = x;
         map.units[selected_unit].y = y;
@@ -494,7 +494,7 @@ function canvas_click(event) {
       }
       selected_unit = -1;
     } else {
-      selected_unit = new_selection == selected_unit ? -1 : new_selection;
+      selected_unit = new_selection === selected_unit ? -1 : new_selection;
     }
   }
   requestAnimationFrame(renderMap);
@@ -513,10 +513,10 @@ function canvas_rightclick(event) {
     for (let i = 0; i < map.lines.length; i++) {
       const [x1, y1, x2, y2] = map.lines[i];
       if (
-        (last_x == x1 || last_x == x2) &&
-        (last_y == y1 || last_y == y2) &&
-        (curr_x == x1 || curr_x == x2) &&
-        (curr_y == y1 || curr_y == y2)
+        (last_x === x1 || last_x === x2) &&
+        (last_y === y1 || last_y === y2) &&
+        (curr_x === x1 || curr_x === x2) &&
+        (curr_y === y1 || curr_y === y2)
       ) {
         map.lines.splice(i, 1);
         i--;
@@ -551,7 +551,7 @@ function canvas_mousemove(event) {
       new_y = last_y;
 
     if (event.type === 'touchmove') {
-      if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
+      if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
         const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
         const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
         const last_diff = Math.sqrt(
@@ -630,7 +630,7 @@ function loadMap() {
 document.addEventListener('DOMContentLoaded', function() {
   dialog_backdrop = $('.dialog-backdrop');
   dialog_backdrop.addEventListener('click', function(e) {
-    if (e.target == dialog_backdrop) closeDialog();
+    if (e.target === dialog_backdrop) closeDialog();
   });
 
   canvas = $('canvas');
