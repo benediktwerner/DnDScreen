@@ -92,9 +92,9 @@ function onWebsocketMessage(e) {
       map.grid_x = data.map.grid_x;
       map.grid_y = data.map.grid_y;
       $('#map-bg').value = data.map.bg_image;
-      $("#grid-size").value = map.grid_size;
-      $("#grid-x").value = map.grid_x;
-      $("#grid-y").value = map.grid_y;
+      $('#grid-size').value = map.grid_size;
+      $('#grid-x').value = map.grid_x;
+      $('#grid-y').value = map.grid_y;
       requestAnimationFrame(renderMap);
     }
     if (data.maps) {
