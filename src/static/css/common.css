@@ -55,6 +55,7 @@ button:hover {
   font-size: 1rem;
   border-radius: 0.25em;
   font-family: Requiem;
+  box-shadow: 0 0 5px 0 #888;
 }
 .button:hover,
 button:hover {

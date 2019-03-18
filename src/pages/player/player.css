@@ -19,6 +19,7 @@ canvas#effects {
   background-color: white;
   padding: 10px;
   cursor: move;
+  box-shadow: 0 0 10px 0 #888;
 }
 .dragover {
   border: 2px dashed #000;
@@ -32,6 +33,7 @@ canvas#effects {
 
 .player.hidden {
   background-color: transparent;
+  box-shadow: none;
 }
 .player.hidden * {
   opacity: 0;
