@@ -589,6 +589,16 @@ function canvas_mousemove(event) {
   requestAnimationFrame(renderMap);
 }
 
+function canvas_keyup(event) {
+  event.preventDefault();
+  if (event.key === 'r') {
+    map.offset_x = 0;
+    map.offset_y = 0;
+    map.zoom = 1;
+  }
+  requestAnimationFrame(renderMap);
+}
+
 /////////////////////
 /////////////////////
 // Event Listeners //
@@ -623,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
   mapCanvas.addEventListener('touchend', canvas_mouseup);
   mapCanvas.addEventListener('mousemove', canvas_mousemove);
   mapCanvas.addEventListener('touchmove', canvas_mousemove);
+  window.addEventListener('keyup', canvas_keyup);
 
   $('#grid-opacity').addEventListener('input', e => {
     map.grid_opacity = toInt(e.target.value);

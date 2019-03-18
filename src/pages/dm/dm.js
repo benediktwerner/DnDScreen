@@ -447,11 +447,14 @@ function canvas_rightclick(event) {
 
 function canvas_keyup(event) {
   event.preventDefault();
-  if (!drawing) return;
-  if (event.key === 'Escape') {
+  if (drawing && event.key === 'Escape') {
     last_x = last_y = 0;
-    requestAnimationFrame(renderMap);
+  } else if (event.key === 'r') {
+    map.offset_x = 0;
+    map.offset_y = 0;
+    map.zoom = 1;
   }
+  requestAnimationFrame(renderMap);
 }
 
 function canvas_mousemove(event) {
