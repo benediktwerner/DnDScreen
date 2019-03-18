@@ -201,3 +201,34 @@ input:checked + .slider:before {
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
+
+input[type='number'] {
+  text-align: center;
+}
+input.small {
+  width: 75px;
+  flex: unset;
+}
+
+.input-row {
+  display: flex;
+  flex-direction: row;
+}
+.input-row > * {
+  margin: 0 5px;
+  flex: 1;
+}
+
+button.toggle {
+  transition: all 150ms ease-in-out;
+}
+button.toggle.active {
+  background-color: #decda3;
+  box-shadow: 0 0 3px 3px #9b2a17 inset;
+  font-weight: 600;
+  color: #9b2a17;
+}
+
+.hide-cursor {
+  cursor: none;
+}

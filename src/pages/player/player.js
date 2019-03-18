@@ -64,6 +64,16 @@ ws.onmessage = function(e) {
   }
 };
 
+function send(type, data) {
+  if (data === undefined) {
+    ws.send(type);
+  } else {
+    const msg = '!' + JSON.stringify({ type, data });
+    console.log('Sending: ' + msg);
+    ws.send(msg);
+  }
+}
+
 /////////////
 /////////////
 // Players //
@@ -453,12 +463,15 @@ function showRewardMoneyDialog(money) {
 /////////
 /////////
 
+const TWO_PI = Math.PI * 2;
+
 let mapCanvas;
 let mapCtx;
 let dragging = false;
 let last_x = 0;
 let last_y = 0;
 let last_touches;
+let selected_unit = -1;
 let map = {
   bg_image: new Image(),
   offset_x: 0,
@@ -469,10 +482,12 @@ let map = {
   grid_y: 0,
   grid_opacity: 20,
   lines: [],
+  units: [],
 };
 
 function updateMapData(data) {
   map.lines = data.lines;
+  map.units = data.units;
   map.bg_image.src = data.bg_image;
   map.grid_size = data.grid_size;
   map.grid_x = data.grid_x;
@@ -485,26 +500,75 @@ function drawLine(x1, y1, x2, y2) {
   mapCtx.lineTo(x2, y2);
 }
 
+function drawLines() {
+  mapCtx.beginPath();
+  for (let line of map.lines) {
+    drawLine(...line);
+  }
+  mapCtx.lineWidth = 2;
+  mapCtx.stroke();
+  mapCtx.lineWidth = 1;
+}
+
 function drawGrid() {
   const SIZE = map.grid_size;
   const SIZE_ZOOM = SIZE * map.zoom;
-  const NUM_X = Math.ceil(mapCanvas.width / map.zoom / SIZE) + 2;
-  const NUM_Y = Math.ceil(mapCanvas.height / map.zoom / SIZE) + 2;
+  const NUM_X = Math.ceil(mapCanvas.width / SIZE_ZOOM) + 2;
+  const NUM_Y = Math.ceil(mapCanvas.height / SIZE_ZOOM) + 2;
 
   mapCtx.save();
+  mapCtx.resetTransform();
   mapCtx.translate(
-    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM + map.grid_x * map.zoom,
-    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM + map.grid_y * map.zoom
+    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM,
+    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM
   );
   mapCtx.scale(map.zoom, map.zoom);
-  mapCtx.beginPath();
 
+  mapCtx.beginPath();
   for (let i = 1; i < NUM_X; i++) drawLine(i * SIZE, 0, i * SIZE, NUM_Y * SIZE);
   for (let i = 1; i < NUM_Y; i++) drawLine(0, i * SIZE, NUM_X * SIZE, i * SIZE);
-
   mapCtx.strokeStyle = `rgba(0,0,0,${map.grid_opacity / 100})`;
   mapCtx.stroke();
   mapCtx.restore();
+}
+
+function fillCircle(x, y, r, color = null) {
+  mapCtx.beginPath();
+  mapCtx.arc(x, y, r, 0, TWO_PI);
+  if (color !== null) mapCtx.fillStyle = color;
+  mapCtx.fill();
+}
+
+function drawUnit(unit) {
+  fillCircle(
+    (unit.x + unit.size / 2) * map.grid_size,
+    (unit.y + unit.size / 2) * map.grid_size,
+    (unit.size * map.grid_size) / 2.5,
+    unit.color
+  );
+}
+
+function drawUnits() {
+  if (selected_unit >= 0 && selected_unit < map.units.length) {
+    const unit = map.units[selected_unit];
+    const ring_size = Math.log2(unit.size + 1) * 0.5;
+    drawUnit({
+      x: unit.x - ring_size / 2,
+      y: unit.y - ring_size / 2,
+      size: unit.size + ring_size,
+      color: 'gold',
+    });
+  }
+
+  for (const unit of map.units) drawUnit(unit);
+}
+
+function to_canvas_x(x) {
+  return (x - map.offset_x) / map.zoom;
+}
+
+function to_canvas_y(y) {
+  return (y - map.offset_y) / map.zoom;
 }
 
 function renderMap() {
@@ -516,15 +580,12 @@ function renderMap() {
   if (map.bg_image.src !== null) {
     mapCtx.drawImage(map.bg_image, 0, 0);
   }
-  mapCtx.beginPath();
-  for (let line of map.lines) {
-    drawLine(...line);
-  }
-  mapCtx.stroke();
-
-  mapCtx.restore();
+  drawLines();
   drawGrid();
+  drawUnits();
+  mapCtx.restore();
 }
+
 function canvas_mousedown(event) {
   event.preventDefault();
   dragging = true;
@@ -536,6 +597,36 @@ function canvas_mousedown(event) {
 function canvas_mouseup(event) {
   event.preventDefault();
   dragging = false;
+}
+
+function canvas_click(event) {
+  const x = Math.floor(to_canvas_x(event.offsetX) / map.grid_size);
+  const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
+  let new_selection = -1;
+
+  for (const i in map.units) {
+    const unit = map.units[i];
+    if (
+      unit.x <= x &&
+      x < unit.x + unit.size &&
+      unit.y <= y &&
+      y < unit.y + unit.size
+    ) {
+      new_selection = +i;
+      break;
+    }
+  }
+  if (new_selection == -1) {
+    if (selected_unit >= 0 && selected_unit < map.units.length) {
+      map.units[selected_unit].x = x;
+      map.units[selected_unit].y = y;
+      send('move-unit', { unit: selected_unit, x: x, y: y });
+    }
+    selected_unit = -1;
+  } else {
+    selected_unit = new_selection == selected_unit ? -1 : new_selection;
+  }
+  requestAnimationFrame(renderMap);
 }
 
 function canvas_mousemove(event) {
@@ -633,6 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
   mapCanvas.addEventListener('touchend', canvas_mouseup);
   mapCanvas.addEventListener('mousemove', canvas_mousemove);
   mapCanvas.addEventListener('touchmove', canvas_mousemove);
+  mapCanvas.addEventListener('click', canvas_click);
   window.addEventListener('keyup', canvas_keyup);
 
   $('#grid-opacity').addEventListener('input', e => {

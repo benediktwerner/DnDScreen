@@ -91,6 +91,7 @@ function onWebsocketMessage(e) {
       map.grid_size = data.map.grid_size;
       map.grid_x = data.map.grid_x;
       map.grid_y = data.map.grid_y;
+      map.units = data.map.units;
       $('#map-bg').value = data.map.bg_image;
       $('#grid-size').value = map.grid_size;
       $('#grid-x').value = map.grid_x;
@@ -120,6 +121,7 @@ function send_map(bg_image_url) {
     grid_size: map.grid_size,
     grid_x: map.grid_x,
     grid_y: map.grid_y,
+    units: map.units,
   };
   if (bg_image_url) data.bg_image = bg_image_url;
   send('update-map', data);
@@ -301,14 +303,17 @@ function confirm(action) {
 /////////
 /////////
 
+const TWO_PI = Math.PI * 2;
+
 let canvas;
 let ctx;
 let dragging = false;
-let drawing = false;
+let map_action = 'move';
 let last_x = 0;
 let last_y = 0;
 let mouse_x, mouse_y;
 let last_touches;
+let selected_unit = -1;
 let maps = [];
 let map = {
   bg_image: new Image(),
@@ -320,6 +325,7 @@ let map = {
   grid_y: 0,
   grid_opacity: 20,
   lines: [],
+  units: [],
 };
 
 function drawLine(x1, y1, x2, y2) {
@@ -330,23 +336,74 @@ function drawLine(x1, y1, x2, y2) {
 function drawGrid() {
   const SIZE = map.grid_size;
   const SIZE_ZOOM = SIZE * map.zoom;
-  const NUM_X = Math.ceil(canvas.width / map.zoom / SIZE) + 2;
-  const NUM_Y = Math.ceil(canvas.height / map.zoom / SIZE) + 2;
+  const NUM_X = Math.ceil(canvas.width / SIZE_ZOOM) + 2;
+  const NUM_Y = Math.ceil(canvas.height / SIZE_ZOOM) + 2;
 
   ctx.save();
+  ctx.resetTransform();
   ctx.translate(
-    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM + map.grid_x * map.zoom,
-    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM + map.grid_y * map.zoom
+    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM,
+    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM
   );
   ctx.scale(map.zoom, map.zoom);
-  ctx.beginPath();
 
+  ctx.beginPath();
   for (let i = 1; i < NUM_X; i++) drawLine(i * SIZE, 0, i * SIZE, NUM_Y * SIZE);
   for (let i = 1; i < NUM_Y; i++) drawLine(0, i * SIZE, NUM_X * SIZE, i * SIZE);
-
   ctx.strokeStyle = `rgba(0,0,0,${map.grid_opacity / 100})`;
   ctx.stroke();
   ctx.restore();
+}
+
+function fillCircle(x, y, r, color = null) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, TWO_PI);
+  if (color !== null) ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawUnit(unit) {
+  fillCircle(
+    (unit.x + unit.size / 2) * map.grid_size,
+    (unit.y + unit.size / 2) * map.grid_size,
+    (unit.size * map.grid_size) / 2.5,
+    unit.color
+  );
+}
+
+function drawUnits() {
+  if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
+    const unit = map.units[selected_unit];
+    drawUnit({
+      x: unit.x - 0.25,
+      y: unit.y - 0.25,
+      size: unit.size + 0.5,
+      color: 'gold',
+    });
+  }
+
+  for (const unit of map.units) drawUnit(unit);
+
+  if (map_action === 'units') {
+    drawUnit({
+      x: Math.floor(to_canvas_x(mouse_x) / map.grid_size),
+      y: Math.floor(to_canvas_y(mouse_y) / map.grid_size),
+      size: toInt($('#unit-size').value),
+      color: $('#unit-color').value,
+    });
+  }
+}
+
+function drawLines() {
+  ctx.beginPath();
+  for (let line of map.lines) {
+    drawLine(...line);
+  }
+  if (map_action === 'draw' && (last_x !== 0 || last_y !== 0))
+    drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.lineWidth = 1;
 }
 
 function align_to_grid(val) {
@@ -362,30 +419,21 @@ function renderMap() {
   if (map.bg_image.src !== null) {
     ctx.drawImage(map.bg_image, 0, 0);
   }
-  ctx.beginPath();
-  for (let line of map.lines) {
-    drawLine(...line);
-  }
-  if (drawing && (last_x !== 0 || last_y !== 0))
-    drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
-  ctx.stroke();
-
-  ctx.restore();
+  drawLines();
   drawGrid();
+  drawUnits();
+  ctx.restore();
 }
 
 function canvas_mousedown(event) {
-  if (drawing) return;
-  event.preventDefault();
+  if (map_action !== 'move') return;
   dragging = true;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
   last_touches = event.touches;
 }
 
-function canvas_mouseup(event) {
-  if (drawing) return;
-  event.preventDefault();
+function canvas_mouseup() {
   dragging = false;
 }
 
@@ -398,28 +446,63 @@ function to_canvas_y(y) {
 }
 
 function canvas_click(event) {
-  if (!drawing) return;
   event.preventDefault();
 
-  if (last_x === 0 && last_y === 0) {
-    last_x = align_to_grid(to_canvas_x(event.offsetX));
-    last_y = align_to_grid(to_canvas_y(event.offsetY));
-  } else {
-    map.lines.push([
-      last_x,
-      last_y,
-      align_to_grid(to_canvas_x(event.offsetX)),
-      align_to_grid(to_canvas_y(event.offsetY)),
-    ]);
+  if (map_action === 'draw') {
+    if (last_x === 0 && last_y === 0) {
+      last_x = align_to_grid(to_canvas_x(event.offsetX));
+      last_y = align_to_grid(to_canvas_y(event.offsetY));
+    } else {
+      map.lines.push([
+        last_x,
+        last_y,
+        align_to_grid(to_canvas_x(event.offsetX)),
+        align_to_grid(to_canvas_y(event.offsetY)),
+      ]);
+      send_map();
+      last_x = last_y = 0;
+    }
+  } else if (map_action === 'units') {
+    map.units.push({
+      x: Math.floor(to_canvas_x(event.offsetX) / map.grid_size),
+      y: Math.floor(to_canvas_y(event.offsetY) / map.grid_size),
+      size: toInt($('#unit-size').value),
+      color: $('#unit-color').value,
+    });
     send_map();
-    last_x = last_y = 0;
+  } else if (map_action === 'move') {
+    const x = Math.floor(to_canvas_x(event.offsetX) / map.grid_size);
+    const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
+    let new_selection = -1;
+    for (const i in map.units) {
+      const unit = map.units[i];
+      if (
+        unit.x <= x &&
+        x < unit.x + unit.size &&
+        unit.y <= y &&
+        y < unit.y + unit.size
+      ) {
+        new_selection = i;
+        break;
+      }
+    }
+    if (new_selection == -1) {
+      if (selected_unit >= 0 && selected_unit < map.units.length) {
+        map.units[selected_unit].x = x;
+        map.units[selected_unit].y = y;
+        send_map();
+      }
+      selected_unit = -1;
+    } else {
+      selected_unit = new_selection == selected_unit ? -1 : new_selection;
+    }
   }
   requestAnimationFrame(renderMap);
 }
 
 function canvas_rightclick(event) {
   event.preventDefault();
-  if (!drawing) return;
+  if (map_action !== 'draw') return;
 
   if (last_x === 0 && last_y === 0) {
     last_x = align_to_grid(to_canvas_x(event.offsetX));
@@ -447,7 +530,7 @@ function canvas_rightclick(event) {
 
 function canvas_keyup(event) {
   event.preventDefault();
-  if (drawing && event.key === 'Escape') {
+  if (map_action === 'draw' && event.key === 'Escape') {
     last_x = last_y = 0;
   } else if (event.key === 'r') {
     map.offset_x = 0;
@@ -458,56 +541,55 @@ function canvas_keyup(event) {
 }
 
 function canvas_mousemove(event) {
-  if (drawing) {
-    mouse_x = event.offsetX;
-    mouse_y = event.offsetY;
-    requestAnimationFrame(renderMap);
-    return;
-  }
-  if (!dragging) return;
-  event.preventDefault();
+  mouse_x = event.offsetX;
+  mouse_y = event.offsetY;
 
-  let new_x = last_x,
-    new_y = last_y;
+  if (map_action === 'move' && dragging) {
+    event.preventDefault();
 
-  if (event.type === 'touchmove') {
-    if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
-      const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
-      const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
-      const last_diff = Math.sqrt(
-        last_diff_x * last_diff_x + last_diff_y * last_diff_y
-      );
-      last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
-      last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
+    let new_x = last_x,
+      new_y = last_y;
 
-      const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
-      const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
-      const curr_diff = Math.sqrt(
-        curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
-      );
-      new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-      new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+    if (event.type === 'touchmove') {
+      if (last_touches && last_touches.length == 2 && event.touches.length == 2) {
+        const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
+        const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
+        const last_diff = Math.sqrt(
+          last_diff_x * last_diff_x + last_diff_y * last_diff_y
+        );
+        last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
+        last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
 
-      const zoom_change = Math.pow(curr_diff / last_diff, 2);
-      map.zoom *= zoom_change;
+        const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
+        const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
+        const curr_diff = Math.sqrt(
+          curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
+        );
+        new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+        new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
 
-      map.offset_x -=
-        ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
-      map.offset_y -=
-        ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
+        const zoom_change = Math.pow(curr_diff / last_diff, 2);
+        map.zoom *= zoom_change;
+
+        map.offset_x -=
+          ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) /
+          zoom_change;
+        map.offset_y -=
+          ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
+      } else {
+        new_x = event.touches[0].pageX;
+        new_y = event.touches[0].pageY;
+      }
+      last_touches = event.touches;
     } else {
-      new_x = event.touches[0].pageX;
-      new_y = event.touches[0].pageY;
+      new_x = event.pageX;
+      new_y = event.pageY;
     }
-    last_touches = event.touches;
-  } else {
-    new_x = event.pageX;
-    new_y = event.pageY;
+    map.offset_x += new_x - last_x;
+    map.offset_y += new_y - last_y;
+    last_x = new_x;
+    last_y = new_y;
   }
-  map.offset_x += new_x - last_x;
-  map.offset_y += new_y - last_y;
-  last_x = new_x;
-  last_y = new_y;
 
   requestAnimationFrame(renderMap);
 }
@@ -592,10 +674,17 @@ document.addEventListener('DOMContentLoaded', function() {
     map.grid_opacity = toInt(e.target.value);
     requestAnimationFrame(renderMap);
   });
-  $('#drawing').addEventListener('change', () => {
-    drawing = !drawing;
-    last_x = last_y = 0;
-  });
+  $$('.map-actions .toggle').forEach(el =>
+    el.addEventListener('click', e => {
+      $$('.map-actions .toggle').forEach(e => e.classList.remove('active'));
+      e.target.classList.add('active');
+      map_action = e.target.dataset['action'];
+      if (map_action === 'units') canvas.classList.add('hide-cursor');
+      else canvas.classList.remove('hide-cursor');
+      last_x = last_y = 0;
+      selected_unit = -1;
+    })
+  );
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });

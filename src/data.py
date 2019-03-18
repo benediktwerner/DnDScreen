@@ -46,6 +46,10 @@ class Data:
 
     def update_player(self, i, values):
         self.players[i].update(values)
+    
+    def move_unit(self, unit, x, y):
+        self.map.units[unit].x = x
+        self.map.units[unit].y = y
 
     def update_map(self, data):
         self.map.update(data)
@@ -171,6 +175,7 @@ class Map:
         self.grid_size = json.get("grid_size", 20)
         self.grid_x = json.get("grid_x", 0)
         self.grid_y = json.get("grid_y", 0)
+        self.units = [Unit(u) for u in json.get("units", [])]
 
     def update(self, data):
         if "lines" in data:
@@ -183,7 +188,9 @@ class Map:
             self.grid_x = data["grid_x"]
         if "grid_y" in data:
             self.grid_y = data["grid_y"]
-
+        if "units" in data:
+            self.units = [Unit(u) for u in data["units"]]
+    
     def to_json(self):
         return {
             "bg_image": self.bg_image,
@@ -191,4 +198,16 @@ class Map:
             "grid_size": self.grid_size,
             "grid_x": self.grid_x,
             "grid_y": self.grid_y,
+            "units": [u.to_json() for u in self.units],
         }
+
+
+class Unit:
+    def __init__(self, json):
+        self.x = json.get("x", 0)
+        self.y = json.get("y", 0)
+        self.size = json.get("size", 1)
+        self.color = json.get("color", "red")
+    
+    def to_json(self):
+        return {"x": self.x, "y": self.y, "size": self.size, "color": self.color}

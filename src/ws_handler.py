@@ -40,8 +40,20 @@ async def send_all(msg):
 
 
 async def handle_player(ws, msg):
-    if msg in ("init", "update"):
+    if msg[0] == "!":
+        msg = json.loads(msg[1:])
+        msg_type, msg_data = msg["type"], msg["data"]
+
+        if msg_type == "move-unit":
+            data.move_unit(**msg_data)
+            await send_all(data)
+
+        return
+    elif msg in ("init", "update"):
         await send(ws, data)
+        return
+
+    await send(ws, f"Error: Invalid msg '{msg}'")
 
 
 async def _handle_init(ws):
