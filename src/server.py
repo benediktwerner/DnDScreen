@@ -40,9 +40,6 @@ async def player_socket_handler(request):
 
 
 async def dm_socket_handler(request):
-    # if request.query.get("password") != DM_PASSWORD:
-    #     raise web.HTTPForbidden()
-
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     ws_handler.dm_websockets.append(ws)
