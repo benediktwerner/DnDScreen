@@ -207,7 +207,7 @@ input[type='number'] {
   text-align: center;
 }
 input.small {
-  width: 75px;
+  width: 60px;
   flex: unset;
 }
 
@@ -232,4 +232,8 @@ button.toggle.active {
 
 .hide-cursor {
   cursor: none;
+}
+
+.text-center {
+  text-align: center;
 }

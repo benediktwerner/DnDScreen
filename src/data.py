@@ -46,7 +46,7 @@ class Data:
 
     def update_player(self, i, values):
         self.players[i].update(values)
-    
+
     def move_unit(self, unit, x, y):
         self.map.units[unit].x = x
         self.map.units[unit].y = y
@@ -190,7 +190,7 @@ class Map:
             self.grid_y = data["grid_y"]
         if "units" in data:
             self.units = [Unit(u) for u in data["units"]]
-    
+
     def to_json(self):
         return {
             "bg_image": self.bg_image,
@@ -208,6 +208,13 @@ class Unit:
         self.y = json.get("y", 0)
         self.size = json.get("size", 1)
         self.color = json.get("color", "red")
-    
+        self.symbol = json.get("symbol", "")
+
     def to_json(self):
-        return {"x": self.x, "y": self.y, "size": self.size, "color": self.color}
+        return {
+            "x": self.x,
+            "y": self.y,
+            "size": self.size,
+            "color": self.color,
+            "symbol": self.symbol,
+        }

@@ -353,12 +353,19 @@ function fillCircle(x, y, r, color = null) {
 }
 
 function drawUnit(unit) {
-  fillCircle(
-    (unit.x + unit.size / 2) * map.grid_size,
-    (unit.y + unit.size / 2) * map.grid_size,
-    (unit.size * map.grid_size) / 2.5,
-    unit.color
-  );
+  const x = (unit.x + unit.size / 2) * map.grid_size;
+  const y = (unit.y + unit.size / 2) * map.grid_size;
+  const r = (unit.size * map.grid_size) / 2.5;
+
+  fillCircle(x, y, r, unit.color);
+
+  if (unit.symbol) {
+    const font_size = (12 * unit.size * map.grid_size) / 20;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.font = font_size + 'px sans-serif';
+    ctx.fillText(unit.symbol, x, y + 0.37 * font_size);
+  }
 }
 
 function drawUnits() {
@@ -380,6 +387,7 @@ function drawUnits() {
       y: Math.floor(to_canvas_y(mouse_y) / map.grid_size),
       size: toInt($('#unit-size').value),
       color: $('#unit-color').value,
+      symbol: $('#unit-symbol').value,
     });
   }
 }
@@ -458,6 +466,7 @@ function canvas_click(event) {
       y: Math.floor(to_canvas_y(event.offsetY) / map.grid_size),
       size: toInt($('#unit-size').value),
       color: $('#unit-color').value,
+      symbol: $('#unit-symbol').value,
     });
     send_map();
   } else if (map_action === 'move') {
@@ -483,8 +492,13 @@ function canvas_click(event) {
         send_map();
       }
       selected_unit = -1;
+    } else if (new_selection === selected_unit) {
+      selected_unit = -1;
     } else {
-      selected_unit = new_selection === selected_unit ? -1 : new_selection;
+      selected_unit = new_selection;
+      $('#unit-size').value = map.units[selected_unit].size;
+      $('#unit-color').value = map.units[selected_unit].color;
+      $('#unit-symbol').value = map.units[selected_unit].symbol;
     }
   }
   requestAnimationFrame(renderMap);
@@ -692,6 +706,39 @@ document.addEventListener('DOMContentLoaded', function() {
       selected_unit = -1;
     })
   );
+  $('#unit-size').addEventListener('change', e => {
+    if (
+      map_action === 'move' &&
+      selected_unit >= 0 &&
+      selected_unit < map.units.length
+    ) {
+      map.units[selected_unit].size = toInt(e.target.value);
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
+  });
+  $('#unit-color').addEventListener('change', e => {
+    if (
+      map_action === 'move' &&
+      selected_unit >= 0 &&
+      selected_unit < map.units.length
+    ) {
+      map.units[selected_unit].color = e.target.value;
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
+  });
+  $('#unit-symbol').addEventListener('change', e => {
+    if (
+      map_action === 'move' &&
+      selected_unit >= 0 &&
+      selected_unit < map.units.length
+    ) {
+      map.units[selected_unit].symbol = e.target.value;
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
+  });
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });

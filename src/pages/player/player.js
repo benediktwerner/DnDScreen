@@ -540,12 +540,19 @@ function fillCircle(x, y, r, color = null) {
 }
 
 function drawUnit(unit) {
-  fillCircle(
-    (unit.x + unit.size / 2) * map.grid_size,
-    (unit.y + unit.size / 2) * map.grid_size,
-    (unit.size * map.grid_size) / 2.5,
-    unit.color
-  );
+  const x = (unit.x + unit.size / 2) * map.grid_size;
+  const y = (unit.y + unit.size / 2) * map.grid_size;
+  const r = (unit.size * map.grid_size) / 2.5;
+
+  fillCircle(x, y, r, unit.color);
+
+  if (unit.symbol) {
+    const font_size = (12 * unit.size * map.grid_size) / 20;
+    mapCtx.fillStyle = 'white';
+    mapCtx.textAlign = 'center';
+    mapCtx.font = font_size + 'px sans-serif';
+    mapCtx.fillText(unit.symbol, x, y + 0.37 * font_size);
+  }
 }
 
 function drawUnits() {
