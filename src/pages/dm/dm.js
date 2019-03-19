@@ -492,28 +492,45 @@ function canvas_click(event) {
 
 function canvas_rightclick(event) {
   event.preventDefault();
-  if (map_action !== 'draw') return;
 
-  if (last_x === 0 && last_y === 0) {
-    last_x = align_to_grid(to_canvas_x(event.offsetX));
-    last_y = align_to_grid(to_canvas_y(event.offsetY));
-  } else {
-    const curr_x = align_to_grid(to_canvas_x(event.offsetX));
-    const curr_y = align_to_grid(to_canvas_y(event.offsetY));
-    for (let i = 0; i < map.lines.length; i++) {
-      const [x1, y1, x2, y2] = map.lines[i];
+  if (map_action === 'draw') {
+    if (last_x === 0 && last_y === 0) {
+      last_x = align_to_grid(to_canvas_x(event.offsetX));
+      last_y = align_to_grid(to_canvas_y(event.offsetY));
+    } else {
+      const curr_x = align_to_grid(to_canvas_x(event.offsetX));
+      const curr_y = align_to_grid(to_canvas_y(event.offsetY));
+      for (let i = 0; i < map.lines.length; i++) {
+        const [x1, y1, x2, y2] = map.lines[i];
+        if (
+          (last_x === x1 || last_x === x2) &&
+          (last_y === y1 || last_y === y2) &&
+          (curr_x === x1 || curr_x === x2) &&
+          (curr_y === y1 || curr_y === y2)
+        ) {
+          map.lines.splice(i, 1);
+          i--;
+        }
+      }
+      send_map();
+      last_x = last_y = 0;
+    }
+  } else if (map_action === 'move') {
+    const x = Math.floor(to_canvas_x(event.offsetX) / map.grid_size);
+    const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
+    for (const i in map.units) {
+      const unit = map.units[i];
       if (
-        (last_x === x1 || last_x === x2) &&
-        (last_y === y1 || last_y === y2) &&
-        (curr_x === x1 || curr_x === x2) &&
-        (curr_y === y1 || curr_y === y2)
+        unit.x <= x &&
+        x < unit.x + unit.size &&
+        unit.y <= y &&
+        y < unit.y + unit.size
       ) {
-        map.lines.splice(i, 1);
-        i--;
+        map.units.splice(i, 1);
+        send_map();
+        break;
       }
     }
-    send_map();
-    last_x = last_y = 0;
   }
   requestAnimationFrame(renderMap);
 }
