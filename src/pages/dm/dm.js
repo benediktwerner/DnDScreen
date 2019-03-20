@@ -96,6 +96,10 @@ function onWebsocketMessage(e) {
 }
 
 function send(type, data) {
+  if (ws.readyState !== WebSocket.OPEN) {
+    addMessage('WebSocket geschlossen');
+    return;
+  }
   if (data === undefined) {
     ws.send(type);
   } else {
