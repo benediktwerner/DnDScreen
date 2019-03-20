@@ -162,9 +162,9 @@ function closeDialog() {
 
 function addPlayer() {
   let data = {
-    name: $('.dialog .name').value,
-    cls: $('.dialog .cls').value,
-    xp: toInt($('.dialog .xp').value),
+    name: $('.dialog #name').value,
+    cls: $('.dialog #cls').value,
+    xp: toInt($('.dialog #xp').value),
   };
   closeDialog();
   send('add-player', data);
@@ -187,9 +187,9 @@ function updatePlayer() {
     values[key] = toInt($('.dialog .total').$(key).value);
   }
 
-  values.xp = toInt($('.dialog .xp').value);
-  values.name = $('.dialog .name').value;
-  values.cls = $('.dialog .cls').value;
+  values.xp = toInt($('.dialog #xp').value);
+  values.name = $('.dialog #name').value;
+  values.cls = $('.dialog #cls').value;
 
   let data = {
     id: toInt(
@@ -222,9 +222,9 @@ function showPlayerDialog(e) {
 
   $('.dialog .player-id').value = target.id;
 
-  $('.dialog .name').value = target.$('name').innerText;
-  $('.dialog .cls').value = target.$('cls').innerText;
-  $('.dialog .xp').value = target.$('xp').innerText;
+  $('.dialog #name').value = target.$('name').innerText;
+  $('.dialog #cls').value = target.$('cls').innerText;
+  $('.dialog #xp').value = target.$('xp').innerText;
 
   const keys = [
     'hp',

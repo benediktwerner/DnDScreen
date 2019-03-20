@@ -165,8 +165,8 @@
     <template id="player-dialog-template">
       <div class="player-info hidden-inputs">
         <h2>
-          <input class="name" /> - <input class="cls" />
-          <span style="float: right"><input class="xp" type="number" min="0" />xp</span>
+          <input id="name" /> - <input id="cls" />
+          <span style="float: right"><input id="xp" type="number" min="0" />xp</span>
         </h2>
         <input class="player-id" type="hidden" />
         <table class="stats-table">
@@ -228,8 +228,8 @@
         <label for="name">Name</label>
         <input id="name" type="text" />
 
-        <label for="class">Klasse</label>
-        <input id="class" type="text" />
+        <label for="cls">Klasse</label>
+        <input id="cls" type="text" />
 
         <label for="xp">Erfahrung</label>
         <input id="xp" type="number" min="0" value="0" />
