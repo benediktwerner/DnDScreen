@@ -69,7 +69,7 @@
           <button type="button" class="toggle" data-action="draw">Z</button>
           <button type="button" class="toggle" data-action="units">E</button>
         </div>
-        <div class="input-row margin-bottom">
+        <div class="input-row">
           <input id="unit-size" class="small" type="number" min="1" max="5" value="1" />
           <select id="unit-color">
             <option value="#ee4035" style="color: #ee4035">Rot</option>
@@ -86,6 +86,10 @@
             <option value="#9400d3" style="color: #9400d3">Lila</option>
           </select>
           <input id="unit-symbol" class="small fix-font" />
+        </div>
+        <div class="input-row margin-bottom">
+          <input type="number" id="unit-hp" />
+          <input type="number" id="unit-max-hp" />
         </div>
 
         <div id="map-more" class="collapsed">

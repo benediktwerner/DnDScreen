@@ -405,6 +405,11 @@ function drawUnit(unit) {
     ctx.font = font_size + 'px sans-serif';
     ctx.fillText(unit.symbol, x, y + 0.37 * font_size);
   }
+  if (unit.max_hp > 0) {
+    ctx.fillStyle = '#051e3e';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(unit.hp + '/' + unit.max_hp, x, y - r - 5);
+  }
 }
 
 function drawUnits() {
@@ -506,6 +511,8 @@ function canvas_click(event) {
       size: toInt($('#unit-size').value),
       color: $('#unit-color').value,
       symbol: $('#unit-symbol').value,
+      hp: toInt($('#unit-hp').value || $("#unit-max-hp").value),
+      max_hp: toInt($('#unit-max-hp').value),
     });
     send_map();
   } else if (map_action === 'move') {
@@ -533,6 +540,8 @@ function canvas_click(event) {
       $('#unit-size').value = map.units[selected_unit].size;
       $('#unit-color').value = map.units[selected_unit].color;
       $('#unit-symbol').value = map.units[selected_unit].symbol;
+      $('#unit-hp').value = map.units[selected_unit].hp;
+      $('#unit-max-hp').value = map.units[selected_unit].max_hp;
     }
   }
   requestAnimationFrame(renderMap);
@@ -734,27 +743,17 @@ document.addEventListener('DOMContentLoaded', function() {
       selected_unit = -1;
     })
   );
-  $('#unit-size').addEventListener('change', e => {
-    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
-      map.units[selected_unit].size = toInt(e.target.value);
-      send_map();
-      requestAnimationFrame(renderMap);
-    }
-  });
-  $('#unit-color').addEventListener('change', e => {
-    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
-      map.units[selected_unit].color = e.target.value;
-      send_map();
-      requestAnimationFrame(renderMap);
-    }
-  });
-  $('#unit-symbol').addEventListener('change', e => {
-    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
-      map.units[selected_unit].symbol = e.target.value;
-      send_map();
-      requestAnimationFrame(renderMap);
-    }
-  });
+  for (const attr of ['size', 'color', 'symbol', 'hp', 'max-hp']) {
+    $('#unit-' + attr).addEventListener('change', e => {
+      if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
+        if (attr === 'color' || attr === 'symbol')
+          map.units[selected_unit][attr.replace('-', '_')] = e.target.value;
+        else map.units[selected_unit][attr.replace('-', '_')] = toInt(e.target.value);
+        send_map();
+        requestAnimationFrame(renderMap);
+      }
+    });
+  }
   $('button.btn-more').addEventListener('click', e => {
     const mapMoreEl = $('#map-more');
     if (mapMoreEl.classList.contains('collapsed')) {

@@ -201,6 +201,8 @@ class Unit:
         self.size = json.get("size", 1)
         self.color = json.get("color", "red")
         self.symbol = json.get("symbol", "")
+        self.hp = json.get("hp", 0)
+        self.max_hp = json.get("max_hp", 0)
 
     def move(self, x, y):
         self.x = x
@@ -213,6 +215,8 @@ class Unit:
             "size": self.size,
             "color": self.color,
             "symbol": self.symbol,
+            "hp": self.hp,
+            "max_hp": self.max_hp,
         }
 
 
