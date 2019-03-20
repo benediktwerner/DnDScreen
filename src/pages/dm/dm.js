@@ -146,9 +146,7 @@ function showDialog(name) {
 
   const template = $('#' + name + '-dialog-template');
   if (template === null) {
-    console.error(
-      `No template for '${name}' dialog. It should be called ${name}-dialog-template.`
-    );
+    console.error(`No template for '${name}' dialog. It should be called ${name}-dialog-template.`);
     return;
   }
 
@@ -251,9 +249,7 @@ function showPlayerDialog(e) {
 
 function giveReward() {
   const values = {};
-  $$('.dialog .per-person input').forEach(
-    e => (values[e.classList[0]] = toInt(e.value))
-  );
+  $$('.dialog .per-person input').forEach(e => (values[e.classList[0]] = toInt(e.value)));
   closeDialog();
   send('reward', values);
 }
@@ -331,10 +327,7 @@ function drawGrid() {
 
   ctx.save();
   ctx.resetTransform();
-  ctx.translate(
-    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM,
-    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM
-  );
+  ctx.translate((map.offset_x % SIZE_ZOOM) - SIZE_ZOOM, (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM);
   ctx.scale(map.zoom, map.zoom);
 
   ctx.beginPath();
@@ -475,12 +468,7 @@ function canvas_click(event) {
     let new_selection = -1;
     for (const i in map.units) {
       const unit = map.units[i];
-      if (
-        unit.x <= x &&
-        x < unit.x + unit.size &&
-        unit.y <= y &&
-        y < unit.y + unit.size
-      ) {
+      if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
         new_selection = i;
         break;
       }
@@ -534,12 +522,7 @@ function canvas_rightclick(event) {
     const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
     for (const i in map.units) {
       const unit = map.units[i];
-      if (
-        unit.x <= x &&
-        x < unit.x + unit.size &&
-        unit.y <= y &&
-        y < unit.y + unit.size
-      ) {
+      if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
         map.units.splice(i, 1);
         send_map();
         break;
@@ -575,17 +558,13 @@ function canvas_mousemove(event) {
       if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
         const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
         const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
-        const last_diff = Math.sqrt(
-          last_diff_x * last_diff_x + last_diff_y * last_diff_y
-        );
+        const last_diff = Math.sqrt(last_diff_x * last_diff_x + last_diff_y * last_diff_y);
         last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
         last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
 
         const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
         const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
-        const curr_diff = Math.sqrt(
-          curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
-        );
+        const curr_diff = Math.sqrt(curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y);
         new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
         new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
 
@@ -593,8 +572,7 @@ function canvas_mousemove(event) {
         map.zoom *= zoom_change;
 
         map.offset_x -=
-          ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) /
-          zoom_change;
+          ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
         map.offset_y -=
           ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
       } else {
@@ -707,33 +685,21 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   );
   $('#unit-size').addEventListener('change', e => {
-    if (
-      map_action === 'move' &&
-      selected_unit >= 0 &&
-      selected_unit < map.units.length
-    ) {
+    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
       map.units[selected_unit].size = toInt(e.target.value);
       send_map();
       requestAnimationFrame(renderMap);
     }
   });
   $('#unit-color').addEventListener('change', e => {
-    if (
-      map_action === 'move' &&
-      selected_unit >= 0 &&
-      selected_unit < map.units.length
-    ) {
+    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
       map.units[selected_unit].color = e.target.value;
       send_map();
       requestAnimationFrame(renderMap);
     }
   });
   $('#unit-symbol').addEventListener('change', e => {
-    if (
-      map_action === 'move' &&
-      selected_unit >= 0 &&
-      selected_unit < map.units.length
-    ) {
+    if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
       map.units[selected_unit].symbol = e.target.value;
       send_map();
       requestAnimationFrame(renderMap);

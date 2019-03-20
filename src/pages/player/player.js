@@ -173,10 +173,8 @@ class Particle {
     } else {
       const xdiff = x - center.x;
       const ydiff = y - center.y;
-      this.vx =
-        Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
-      this.vy =
-        Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
+      this.vx = Math.sign(xdiff) * (Math.log((Math.abs(xdiff) + 1) / 5) * Math.random());
+      this.vy = Math.sign(ydiff) * (Math.log((Math.abs(ydiff) + 1) / 5) * Math.random());
     }
     this.friction = Math.random() * 0.05 + 0.95;
 
@@ -233,12 +231,7 @@ function render() {
   alive = false;
 
   effectsCtx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
-  const imageData = effectsCtx.getImageData(
-    0,
-    0,
-    effectsCanvas.width,
-    effectsCanvas.height
-  );
+  const imageData = effectsCtx.getImageData(0, 0, effectsCanvas.width, effectsCanvas.height);
 
   for (const p of particles) {
     if (p.render(imageData)) alive = true;
@@ -518,10 +511,7 @@ function drawGrid() {
 
   mapCtx.save();
   mapCtx.resetTransform();
-  mapCtx.translate(
-    (map.offset_x % SIZE_ZOOM) - SIZE_ZOOM,
-    (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM
-  );
+  mapCtx.translate((map.offset_x % SIZE_ZOOM) - SIZE_ZOOM, (map.offset_y % SIZE_ZOOM) - SIZE_ZOOM);
   mapCtx.scale(map.zoom, map.zoom);
 
   mapCtx.beginPath();
@@ -611,12 +601,7 @@ function canvas_click(event) {
 
   for (const i in map.units) {
     const unit = map.units[i];
-    if (
-      unit.x <= x &&
-      x < unit.x + unit.size &&
-      unit.y <= y &&
-      y < unit.y + unit.size
-    ) {
+    if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
       new_selection = +i;
       break;
     }
@@ -645,17 +630,13 @@ function canvas_mousemove(event) {
     if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
       const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
       const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
-      const last_diff = Math.sqrt(
-        last_diff_x * last_diff_x + last_diff_y * last_diff_y
-      );
+      const last_diff = Math.sqrt(last_diff_x * last_diff_x + last_diff_y * last_diff_y);
       last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
       last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
 
       const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
       const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
-      const curr_diff = Math.sqrt(
-        curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y
-      );
+      const curr_diff = Math.sqrt(curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y);
       new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
       new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
 
@@ -663,11 +644,9 @@ function canvas_mousemove(event) {
       map.zoom *= zoom_change;
 
       map.offset_x -=
-        ((new_x - mapCanvas.offsetLeft - map.offset_x) * (zoom_change - 1)) /
-        zoom_change;
+        ((new_x - mapCanvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
       map.offset_y -=
-        ((new_y - mapCanvas.offsetTop - map.offset_y) * (zoom_change - 1)) /
-        zoom_change;
+        ((new_y - mapCanvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
     } else {
       new_x = event.touches[0].pageX;
       new_y = event.touches[0].pageY;
