@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <canvas> </canvas>
+      <canvas></canvas>
 
       <div class="sidebar">
         <h2>Aktionen</h2>
@@ -59,21 +59,8 @@
         <button onclick="confirm(() => send('long-rest'))">Lange Rast</button>
         <button onclick="showRewardsDialog()">Belohnung</button>
 
-        <h2>Karte</h2>
-        <select id="map-bg" class="margin-bottom">
-          <option
-            class="default"
-            value="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
-            >Kein Hintergrund</option
-          >
-        </select>
-        <div class="input-row margin-bottom">
-          <input id="grid-x" type="number" value="0" />
-          <input id="grid-y" type="number" value="0" />
-          <input id="grid-size" type="number" value="20" />
-        </div>
-        <input id="grid-opacity" type="range" min="0" max="100" value="20" />
-        <div class="input-row margin-bottom map-actions">
+        <h2>Karte <button type="button" class="btn-more">Mehr</button></h2>
+        <div class="input-row map-actions">
           <button type="button" class="toggle active" data-action="move">B</button>
           <button type="button" class="toggle" data-action="draw">Z</button>
           <button type="button" class="toggle" data-action="units">E</button>
@@ -85,11 +72,27 @@
             <option value="green">Gruen</option>
             <option value="blue">Blau</option>
           </select>
-          <input id="unit-symbol" class="small fix-font text-center" />
+          <input id="unit-symbol" class="small fix-font" />
         </div>
-        <button onclick="showLoadMapDialog()">Laden</button>
-        <button onclick="showDialog('save-map')">Speichern</button>
-        <button onclick="confirm(() => newMap())">Neu</button>
+
+        <div id="map-more" class="collapsed">
+          <input id="grid-opacity" type="range" min="0" max="100" value="20" />
+          <select id="map-bg" class="margin-bottom">
+            <option
+              class="default"
+              value="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+              >Kein Hintergrund</option
+            >
+          </select>
+          <div class="input-row margin-bottom">
+            <input id="grid-x" type="number" value="0" />
+            <input id="grid-y" type="number" value="0" />
+            <input id="grid-size" type="number" value="20" />
+          </div>
+          <button onclick="showLoadMapDialog()">Laden</button>
+          <button onclick="showDialog('save-map')">Speichern</button>
+          <button onclick="confirm(() => newMap())">Neu</button>
+        </div>
 
         <div class="messages">
           <button type="button" onclick="clearMessages()" hidden>X</button>

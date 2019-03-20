@@ -84,8 +84,8 @@ input,
 select {
   display: block;
   width: 100%;
-  height: calc(1.5em + 0.75rem + 2px);
-  padding: 0.375rem 0.75rem;
+  height: calc(1.4em + 0.5rem + 2px);
+  padding: 0 0.3rem;
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
@@ -207,9 +207,6 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-input[type='number'] {
-  text-align: center;
-}
 input.small {
   width: 60px;
   flex: unset;
@@ -236,8 +233,4 @@ button.toggle.active {
 
 .hide-cursor {
   cursor: none;
-}
-
-.text-center {
-  text-align: center;
 }

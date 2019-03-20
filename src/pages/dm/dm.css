@@ -14,10 +14,13 @@ body {
   box-shadow: 0 0 20px 4px #333;
 }
 .sidebar button {
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
 .sidebar h2:not(:first-child) {
-  margin-top: 30px;
+  margin-top: 20px;
+}
+.sidebar input {
+  text-align: center;
 }
 
 .banner-img {
@@ -144,4 +147,22 @@ table input {
 canvas {
   width: 100%;
   height: 100%;
+}
+
+#map-more {
+  overflow: hidden;
+  max-height: 200px;
+  transition: max-height 500ms ease-in-out;
+}
+#map-more.collapsed {
+  max-height: 0;
+}
+
+button.btn-more {
+  margin: 0;
+  float: right;
+}
+
+#grid-opacity {
+  margin: 10px 0;
 }

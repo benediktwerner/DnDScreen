@@ -713,6 +713,16 @@ document.addEventListener('DOMContentLoaded', function() {
       requestAnimationFrame(renderMap);
     }
   });
+  $('button.btn-more').addEventListener('click', e => {
+    const mapMoreEl = $('#map-more');
+    if (mapMoreEl.classList.contains('collapsed')) {
+      mapMoreEl.classList.remove('collapsed');
+      e.target.innerText = 'Weniger';
+    } else {
+      mapMoreEl.classList.add('collapsed');
+      e.target.innerText = 'Mehr';
+    }
+  });
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });
