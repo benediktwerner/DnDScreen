@@ -52,6 +52,20 @@ ws.onmessage = function(e) {
     if (data.map) {
       updateMapData(data.map);
     }
+    if (data.initiative) {
+      $$('.initiative-bar .initiative-cell').forEach(el => el.remove());
+      const template = $('#initiative-cell-template');
+
+      for (const unit of data.initiative.units) {
+        const newEl = template.content.cloneNode(true);
+        newEl.firstElementChild.$('name').innerText = unit.name;
+        newEl.firstElementChild.$('initiative').innerText = unit.initiative;
+        $('.initiative-bar').appendChild(newEl);
+      }
+
+      const activeIndex = data.initiative.activeIndex + 1;
+      $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
+    }
   } else if (type === 'reward') {
     if (data.xp > 0) {
       showRewardXpDialog(data.xp);
@@ -59,6 +73,9 @@ ws.onmessage = function(e) {
       delete data.xp;
       showRewardMoneyDialog(data);
     }
+  } else if (type === 'initiative-index') {
+    $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
+    $(`.initiative-bar .initiative-cell:nth-child(${data + 1})`).classList.add('active');
   } else {
     alert(`Invalid message type: ${type}\n${JSON.stringify(data)}`);
   }

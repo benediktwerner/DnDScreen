@@ -50,7 +50,10 @@
         </div>
       </div>
 
-      <canvas></canvas>
+      <div class="middle-section">
+        <div class="initiative-bar"></div>
+        <canvas></canvas>
+      </div>
 
       <div class="sidebar">
         <h2>Aktionen</h2>
@@ -58,6 +61,7 @@
         <button onclick="send('save')">Speichern</button>
         <button onclick="confirm(() => send('long-rest'))">Lange Rast</button>
         <button onclick="showRewardsDialog()">Belohnung</button>
+        <button onclick="showInitiativeDialog()">Initiative</button>
 
         <h2>Karte <button type="button" class="btn-more">Mehr</button></h2>
         <div class="input-row map-actions">
@@ -123,6 +127,13 @@
     </svg>
 
     <!-- TEMPLATES -->
+
+    <template id="initiative-cell-template">
+      <div class="initiative-cell">
+        <span class="name"></span>
+        <div class="initiative"></div>
+      </div>
+    </template>
 
     <template id="confirm-dialog-template">
       <h2>Bist du sicher?</h2>
@@ -284,6 +295,12 @@
       <h2>Karte speichern</h2>
       <input class="map-name" />
       <button class="action" type="button" onclick="saveMap()">Speichern</button>
+    </template>
+
+    <template id="initiative-dialog-template">
+      <h2>Initiative</h2>
+      <textarea class="initiative" placeholder="17 Goblin"></textarea>
+      <button class="action" type="button" onclick="saveInitiative()">Speichern</button>
     </template>
 
     <!-- Scripts -->

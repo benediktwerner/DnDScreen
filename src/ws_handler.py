@@ -75,6 +75,11 @@ async def _handle_new_map(ws):
     await send_all(data)
 
 
+async def _handle_next_initiative(ws):
+    data.next_initiative()
+    await send_all({"type": "initiative-index", "data": data.initiative.activeIndex})
+
+
 async def _handle_add_player(ws, **player):
     data.add_player(player)
     await send_all(data)
@@ -108,17 +113,24 @@ async def _handle_save_map(ws, name):
     await send(ws, "Karte gespeichert")
 
 
+async def _handle_update_initiative(ws, initiative):
+    data.update_initiative(initiative)
+    await send_all(data)
+
+
 DM_HANDLERS = {
     "init": _handle_init,
     "save": _handle_save,
     "long-rest": _handle_long_rest,
     "new-map": _handle_new_map,
+    "next-initiative": _handle_next_initiative,
     "add-player": _handle_add_player,
     "update-player": _handle_update_player,
     "reward": _handle_reward,
     "update-map": _handle_update_map,
     "load-map": _handle_load_map,
     "save-map": _handle_save_map,
+    "update-initiative": _handle_update_initiative,
 }
 
 

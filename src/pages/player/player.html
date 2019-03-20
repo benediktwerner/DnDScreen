@@ -28,6 +28,8 @@
     <canvas id="map"> </canvas>
     <input id="grid-opacity" type="range" min="0" max="100" value="20" />
 
+    <div class="initiative-bar"></div>
+
     <!-- Player info -->
     <div class="players">
       <div class="player hidden one" id="player-0" draggable="true">
@@ -168,6 +170,15 @@
 
     <!-- Effects canvas -->
     <canvas id="effects"></canvas>
+
+    <!-- TEMPLATES -->
+
+    <template id="initiative-cell-template">
+      <div class="initiative-cell">
+        <span class="name"></span>
+        <div class="initiative"></div>
+      </div>
+    </template>
 
     <!-- Dialog templates -->
 

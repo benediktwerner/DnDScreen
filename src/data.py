@@ -40,6 +40,7 @@ class Data:
 
         self.players = [Player(p) for p in json.get("players", [])]
         self.map = Map(json.get("map", {}))
+        self.initiative = Initiative(json.get("initiative", {}))
 
     def add_player(self, json):
         self.players.append(Player(json))
@@ -84,6 +85,12 @@ class Data:
     def new_map(self):
         self.map = Map({})
 
+    def next_initiative(self):
+        self.initiative.next()
+
+    def update_initiative(self, initiative):
+        self.initiative.update(initiative)
+
     @property
     def map_images(self):
         if not os.path.isdir(MAP_IMAGES_DIR):
@@ -102,6 +109,7 @@ class Data:
             "map": self.map.to_json(),
             "maps": self.maps,
             "map_images": self.map_images,
+            "initiative": self.initiative.to_json(),
         }
 
     @staticmethod
@@ -221,3 +229,32 @@ class Unit:
             "color": self.color,
             "symbol": self.symbol,
         }
+
+
+class Initiative:
+    def __init__(self, json):
+        self.units = [InitiativeUnit(u) for u in json.get("units", [])]
+        self.activeIndex = json.get("activeIndex", 0)
+
+    def next(self):
+        self.activeIndex = (self.activeIndex + 1) % len(self.units)
+
+    def update(self, data):
+        self.activeIndex = 0
+        self.units = [InitiativeUnit(u) for u in data]
+        self.units.sort(key=lambda u: u.initiative)
+
+    def to_json(self):
+        return {
+            "units": [u.to_json() for u in self.units],
+            "activeIndex": self.activeIndex,
+        }
+
+
+class InitiativeUnit:
+    def __init__(self, json):
+        self.name = json.get("name", "Unnamed")
+        self.initiative = json.get("initiative", 0)
+
+    def to_json(self):
+        return {"name": self.name, "initiative": self.initiative}

@@ -223,7 +223,7 @@ table {
 #grid-opacity {
   position: fixed;
   top: calc(50vh - 15px);
-  right: calc(120px + 30px - (100vh - 2 * 180px) / 2);
+  right: calc(120px + 100px - (100vh - 2 * 180px) / 2);
   bottom: calc(50vh - 15px);
   width: calc(100vh - 2 * 180px);
   transform: rotate(-90deg);
@@ -240,4 +240,36 @@ button.btn-bottom-left {
   line-height: 1;
   color: rgba(0,0,0,0.1);
   box-shadow: none;
+}
+
+.initiative-bar {
+  position: fixed;
+  top: calc(50vh - 25px);
+  right: calc(120px + 40px - (100vh - 2 * 180px) / 2);
+  bottom: calc(50vh - 25px);
+  width: calc(100vh - 2 * 180px);
+  transform: rotate(-90deg);
+  height: 50px;
+  background-color: white;
+  box-shadow: 0 0 10px 0 #888;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.initiative-bar .initiative-cell {
+  padding: 0 5px;
+  margin: 0 10px;
+  text-align: center;
+  transition: all 300ms ease-in-out;
+  border: 2px solid transparent;
+}
+.initiative-cell.active {
+  border: 2px solid #9b2a17;
+  border-radius: 5px;
+}
+.initiative {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  margin-top: -3px;
 }

@@ -91,7 +91,24 @@ function onWebsocketMessage(e) {
     if (data.maps) {
       maps = data.maps;
     }
+    if (data.initiative) {
+      $$('.initiative-bar .initiative-cell').forEach(el => el.remove());
+      const template = $('#initiative-cell-template');
+
+      for (const unit of data.initiative.units) {
+        const newEl = template.content.cloneNode(true);
+        newEl.firstElementChild.$('name').innerText = unit.name;
+        newEl.firstElementChild.$('initiative').innerText = unit.initiative;
+        $('.initiative-bar').appendChild(newEl);
+      }
+
+      const activeIndex = data.initiative.activeIndex + 1;
+      $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
+    }
     closeDialog();
+  } else if (type === 'initiative-index') {
+    $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
+    $(`.initiative-bar .initiative-cell:nth-child(${data + 1})`).classList.add('active');
   }
 }
 
@@ -277,6 +294,31 @@ function showRewardsDialog() {
     e.addEventListener('change', onRewardsDialogChange);
     e.addEventListener('click', e => e.target.select());
   });
+}
+
+function showInitiativeDialog() {
+  showDialog('initiative');
+  let currentInitiative = '';
+  $$('.initiative-cell').forEach(el => {
+    currentInitiative += el.$('initiative').innerText + ' ';
+    currentInitiative += el.$('name').innerText + '\n';
+  });
+  $('.dialog .initiative').value = currentInitiative;
+}
+
+function saveInitiative() {
+  const text = $('.dialog .initiative').value;
+  const result = [];
+  text.split('\n').forEach(line => {
+    if (!line) return;
+    const values = line.split(' ');
+    result.push({
+      initiative: toInt(values[0]),
+      name: values.slice(1).join(' '),
+    });
+  });
+  closeDialog();
+  send('update-initiative', { initiative: result });
 }
 
 function confirm(action) {
@@ -723,6 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
       e.target.innerText = 'Mehr';
     }
   });
+  $('.initiative-bar').addEventListener('click', () => send('next-initiative'));
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });
