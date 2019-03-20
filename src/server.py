@@ -68,6 +68,7 @@ app.add_routes(
         web.get("/player_socket", player_socket_handler),
         web.static("/pages", "pages"),
         web.static("/css", "static/css"),
+        web.static("/js", "static/js"),
         web.static("/fonts", "static/fonts"),
         web.static("/img", "static/img"),
         web.static("/", "static/icons"),
