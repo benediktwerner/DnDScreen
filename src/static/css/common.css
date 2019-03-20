@@ -132,7 +132,7 @@ label {
 }
 
 .fix-font {
-  font-family: Arial;
+  font-family: Arial !important;
 }
 
 input[type='range'] {
