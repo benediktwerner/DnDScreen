@@ -739,6 +739,28 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(renderMap);
   });
 
+  if (window.navigator.standalone) {
+    $('button.fullscreen').hidden = true;
+    $('button.reload').hidden = false;
+    $('button.reload').addEventListener('click', () => {
+      location.reload();
+    });
+  } else {
+    $('button.fullscreen').addEventListener('click', () => {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.cancelFullScreen) document.cancelFullScreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
+      } else {
+        const el = document.documentElement;
+        if (el.requestFullscreen) e.requestFullscreen();
+        else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      }
+    });
+  }
+
   const { width, height } = mapCanvas.getBoundingClientRect();
   mapCanvas.width = width;
   mapCanvas.height = height;
