@@ -42,19 +42,6 @@ class Data:
         self.map = Map(json.get("map", {}))
         self.initiative = Initiative(json.get("initiative", {}))
 
-    def add_player(self, json):
-        self.players.append(Player(json))
-
-    def update_player(self, i, values):
-        self.players[i].update(values)
-
-    def move_unit(self, unit, x, y):
-        self.map.units[unit].x = x
-        self.map.units[unit].y = y
-
-    def update_map(self, data):
-        self.map.update(data)
-
     def long_rest(self):
         for player in self.players:
             player.long_rest()
@@ -84,12 +71,6 @@ class Data:
 
     def new_map(self):
         self.map = Map({})
-
-    def next_initiative(self):
-        self.initiative.next()
-
-    def update_initiative(self, initiative):
-        self.initiative.update(initiative)
 
     @property
     def map_images(self):
@@ -220,6 +201,10 @@ class Unit:
         self.size = json.get("size", 1)
         self.color = json.get("color", "red")
         self.symbol = json.get("symbol", "")
+
+    def move(self, x, y):
+        self.x = x
+        self.y = y
 
     def to_json(self):
         return {

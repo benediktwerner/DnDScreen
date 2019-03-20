@@ -5,7 +5,7 @@ from typing import List
 
 import aiohttp
 
-from data import Data, Map
+from data import Data, Player
 
 
 data = Data.load()
@@ -39,14 +39,18 @@ async def send_all(msg):
     await send_players(msg)
 
 
+async def _handle_move_unit(ws, unit, x, y):
+    data.map.units[unit].move(x, y)
+    await send_all(data)
+
+
 async def handle_player(ws, msg):
     if msg[0] == "!":
         msg = json.loads(msg[1:])
         msg_type, msg_data = msg["type"], msg["data"]
 
         if msg_type == "move-unit":
-            data.move_unit(**msg_data)
-            await send_all(data)
+            _handle_move_unit(ws, **msg_data)
 
         return
     elif msg in ("init", "update"):
@@ -76,17 +80,17 @@ async def _handle_new_map(ws):
 
 
 async def _handle_next_initiative(ws):
-    data.next_initiative()
+    data.initiative.next()
     await send_all({"type": "initiative-index", "data": data.initiative.activeIndex})
 
 
 async def _handle_add_player(ws, **player):
-    data.add_player(player)
+    data.players.append(Player(player))
     await send_all(data)
 
 
 async def _handle_update_player(ws, id, values):
-    data.update_player(id, values)
+    data.player[id].update(values)
     await send_all(data)
 
 
@@ -97,7 +101,7 @@ async def _handle_reward(ws, **rewards):
 
 
 async def _handle_update_map(ws, **values):
-    data.update_map(values)
+    data.map.update(values)
     await send_players(data)
 
 
@@ -114,7 +118,7 @@ async def _handle_save_map(ws, name):
 
 
 async def _handle_update_initiative(ws, initiative):
-    data.update_initiative(initiative)
+    data.initiative.update(initiative)
     await send_all(data)
 
 
