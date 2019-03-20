@@ -87,8 +87,9 @@
           </select>
           <input id="unit-symbol" class="small fix-font text-center" />
         </div>
-        <button onclick="showLoadMapDialog()">Karte laden</button>
+        <button onclick="showLoadMapDialog()">Laden</button>
         <button onclick="showDialog('save-map')">Speichern</button>
+        <button onclick="confirm(() => newMap())">Neu</button>
 
         <div class="messages">
           <button type="button" onclick="clearMessages()" hidden>X</button>

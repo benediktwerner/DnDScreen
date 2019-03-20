@@ -70,6 +70,11 @@ async def _handle_long_rest(ws):
     await send_all(data)
 
 
+async def _handle_new_map(ws):
+    data.new_map()
+    await send_all(data)
+
+
 async def _handle_add_player(ws, **player):
     data.add_player(player)
     await send_all(data)
@@ -107,6 +112,7 @@ DM_HANDLERS = {
     "init": _handle_init,
     "save": _handle_save,
     "long-rest": _handle_long_rest,
+    "new-map": _handle_new_map,
     "add-player": _handle_add_player,
     "update-player": _handle_update_player,
     "reward": _handle_reward,

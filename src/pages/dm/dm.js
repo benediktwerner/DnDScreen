@@ -624,6 +624,10 @@ function loadMap() {
   }
 }
 
+function newMap() {
+  send('new-map');
+}
+
 /////////////////////
 /////////////////////
 // Event Listeners //

@@ -81,6 +81,9 @@ class Data:
         with open(path, "w") as f:
             json.dump(self.map.to_json(), f)
 
+    def new_map(self):
+        self.map = Map({})
+
     @property
     def map_images(self):
         if not os.path.isdir(MAP_IMAGES_DIR):
