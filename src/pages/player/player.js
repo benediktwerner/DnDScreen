@@ -594,7 +594,6 @@ function renderMap() {
 }
 
 function canvas_mousedown(event) {
-  event.preventDefault();
   dragging = true;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
@@ -602,7 +601,6 @@ function canvas_mousedown(event) {
 }
 
 function canvas_mouseup(event) {
-  event.preventDefault();
   dragging = false;
 }
 
