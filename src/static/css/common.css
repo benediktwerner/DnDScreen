@@ -140,6 +140,8 @@ input[type='range'] {
   appearance: none;
   border: none;
   height: 30px;
+  padding: 0;
+  border-radius: 2px;
   background: rgba(222, 205, 163, 0.7);
   box-shadow: inset 0 0 5px 0;
   transition: opacity 0.2s;
@@ -152,6 +154,8 @@ input[type='range']::-webkit-slider-thumb {
   background: #9b2a17;
   box-shadow: 0 0 3px 0;
   cursor: pointer;
+  border: none;
+  border-radius: 2px;
 }
 
 .switch {

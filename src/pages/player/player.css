@@ -222,9 +222,9 @@ table {
 
 #grid-opacity {
   position: fixed;
-  top: calc(50vh - 17px);
-  right: -64px;
-  bottom: calc(50vh - 17px);
+  top: calc(50vh - 15px);
+  right: calc(120px + 30px - (100vh - 2 * 180px) / 2);
+  bottom: calc(50vh - 15px);
   width: calc(100vh - 2 * 180px);
   transform: rotate(-90deg);
 }
