@@ -477,6 +477,8 @@ const TWO_PI = Math.PI * 2;
 
 let mapCanvas;
 let mapCtx;
+let visibilityCanvas;
+let visibilityCtx;
 let dragging = false;
 let last_x = 0;
 let last_y = 0;
@@ -493,6 +495,7 @@ let map = {
   grid_opacity: 20,
   lines: [],
   units: [],
+  visible_areas: [],
 };
 
 function updateMapData(data) {
@@ -502,6 +505,7 @@ function updateMapData(data) {
   map.grid_size = data.grid_size;
   map.grid_x = data.grid_x;
   map.grid_y = data.grid_y;
+  map.visible_areas = data.visible_areas;
   requestAnimationFrame(renderMap);
 }
 
@@ -598,6 +602,22 @@ function renderMap() {
   drawGrid();
   drawUnits();
   mapCtx.restore();
+
+  if (map.visible_areas.length > 0) {
+    visibilityCtx.clearRect(0, 0, visibilityCanvas.width, visibilityCanvas.height);
+
+    visibilityCtx.save();
+    visibilityCtx.translate(map.offset_x, map.offset_y);
+    visibilityCtx.scale(map.zoom, map.zoom);
+    for (const area of map.visible_areas) {
+      visibilityCtx.fillRect(...area);
+    }
+    visibilityCtx.restore();
+
+    mapCtx.globalCompositeOperation = 'destination-in';
+    mapCtx.drawImage(visibilityCanvas, 0, 0);
+    mapCtx.globalCompositeOperation = 'source-over';
+  }
 }
 
 function canvas_mousedown(event) {
@@ -718,6 +738,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   mapCanvas = $('#map');
   mapCtx = mapCanvas.getContext('2d');
+  visibilityCanvas = document.createElement('canvas');
+  visibilityCtx = visibilityCanvas.getContext('2d');
+
+  const { width, height } = mapCanvas.getBoundingClientRect();
+  mapCanvas.width = width;
+  mapCanvas.height = height;
+  visibilityCanvas.width = width;
+  visibilityCanvas.height = height;
 
   mapCanvas.addEventListener('mousedown', canvas_mousedown);
   mapCanvas.addEventListener('touchstart', canvas_mousedown);
@@ -754,10 +782,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-  const { width, height } = mapCanvas.getBoundingClientRect();
-  mapCanvas.width = width;
-  mapCanvas.height = height;
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });

@@ -7,6 +7,13 @@ Element.prototype.$ = function(cls) {
   return this.getElementsByClassName(cls)[0];
 };
 
+CanvasRenderingContext2D.prototype.fillCircle = function(x, y, r, color = null) {
+  this.beginPath();
+  this.arc(x, y, r, 0, TWO_PI);
+  if (color !== null) this.fillStyle = color;
+  this.fill();
+};
+
 function toInt(val) {
   const result = parseInt(val);
   if (isNaN(result)) return 0;
@@ -82,6 +89,7 @@ function onWebsocketMessage(e) {
       map.grid_x = data.map.grid_x;
       map.grid_y = data.map.grid_y;
       map.units = data.map.units;
+      map.visible_areas = data.map.visible_areas;
       $('#map-bg').value = data.map.bg_image;
       $('#grid-size').value = map.grid_size;
       $('#grid-x').value = map.grid_x;
@@ -133,6 +141,7 @@ function send_map(bg_image_url) {
     grid_x: map.grid_x,
     grid_y: map.grid_y,
     units: map.units,
+    visible_areas: map.visible_areas,
   };
   if (bg_image_url) data.bg_image = bg_image_url;
   send('update-map', data);
@@ -339,13 +348,16 @@ const TWO_PI = Math.PI * 2;
 
 let canvas;
 let ctx;
+let visibility_canvas;
 let dragging = false;
 let map_action = 'move';
 let last_x = 0;
 let last_y = 0;
+let dragstart_x, dragstart_y;
 let mouse_x, mouse_y;
 let last_touches;
 let selected_unit = -1;
+let selected_corner = -1;
 let maps = [];
 let map = {
   bg_image: new Image(),
@@ -358,6 +370,7 @@ let map = {
   grid_opacity: 20,
   lines: [],
   units: [],
+  visible_areas: [],
 };
 
 function drawLine(x1, y1, x2, y2) {
@@ -384,19 +397,12 @@ function drawGrid() {
   ctx.restore();
 }
 
-function fillCircle(x, y, r, color = null) {
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, TWO_PI);
-  if (color !== null) ctx.fillStyle = color;
-  ctx.fill();
-}
-
 function drawUnit(unit) {
   const x = (unit.x + unit.size / 2) * map.grid_size;
   const y = (unit.y + unit.size / 2) * map.grid_size;
   const r = (unit.size * map.grid_size) / 2.5;
 
-  fillCircle(x, y, r, unit.color);
+  ctx.fillCircle(x, y, r, unit.color);
 
   if (unit.symbol) {
     const font_size = (12 * unit.size * map.grid_size) / 20;
@@ -448,6 +454,39 @@ function drawLines() {
   ctx.lineWidth = 1;
 }
 
+function drawVisibility() {
+  const vctx = visibility_canvas.getContext('2d');
+
+  vctx.clearRect(0, 0, visibility_canvas.width, visibility_canvas.height);
+  vctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  vctx.fillRect(0, 0, visibility_canvas.width, visibility_canvas.height);
+
+  vctx.save();
+  vctx.translate(map.offset_x, map.offset_y);
+  vctx.scale(map.zoom, map.zoom);
+  for (const area of map.visible_areas) {
+    vctx.clearRect(...area);
+  }
+  if (dragging && selected_unit < 0) {
+    vctx.clearRect(
+      align_to_grid(to_canvas_x(dragstart_x)),
+      align_to_grid(to_canvas_y(dragstart_y)),
+      align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
+      align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y))
+    );
+  } else if (selected_unit >= 0) {
+    const [x, y, w, h] = map.visible_areas[selected_unit];
+    vctx.fillStyle = 'black';
+    vctx.fillCircle(x, y, 5, vctx);
+    vctx.fillCircle(x + w, y, 5, vctx);
+    vctx.fillCircle(x, y + h, 5, vctx);
+    vctx.fillCircle(x + w, y + h, 5, vctx);
+  }
+  vctx.restore();
+
+  ctx.drawImage(visibility_canvas, 0, 0);
+}
+
 function align_to_grid(val) {
   return Math.round(val / map.grid_size) * map.grid_size;
 }
@@ -465,18 +504,77 @@ function renderMap() {
   drawGrid();
   drawUnits();
   ctx.restore();
+
+  if (map_action === 'visibility') {
+    drawVisibility();
+  }
 }
 
 function canvas_mousedown(event) {
-  if (map_action !== 'move') return;
+  if (map_action !== 'move' && map_action !== 'visibility') return;
   dragging = true;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
+  dragstart_x = event.offsetX;
+  dragstart_y = event.offsetY;
   last_touches = event.touches;
+
+  if (map_action === 'visibility' && event.type !== 'touchstart') {
+    const click_x = to_canvas_x(dragstart_x);
+    const click_y = to_canvas_y(dragstart_y);
+
+    if (selected_unit >= 0) {
+      const [x, y, w, h] = map.visible_areas[selected_unit];
+      const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+      for (const i in corners) {
+        const [cx, cy] = corners[i];
+        if ((cx - click_x) ** 2 + (cy - click_y) ** 2 <= 25) {
+          selected_corner = i;
+          return;
+        }
+      }
+    }
+
+    selected_unit = -1;
+    for (const i in map.visible_areas) {
+      const [x, y, w, h] = map.visible_areas[i];
+      if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+        selected_unit = i;
+        break;
+      }
+    }
+  }
 }
 
-function canvas_mouseup() {
+function canvas_mouseup(event) {
   dragging = false;
+
+  if (map_action === 'visibility' && event.type !== 'touchend') {
+    if (selected_unit < 0) {
+      const new_area = [
+        align_to_grid(to_canvas_x(dragstart_x)),
+        align_to_grid(to_canvas_y(dragstart_y)),
+        align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
+        align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y)),
+      ];
+      if (new_area[2] != 0 && new_area[3] != 0) {
+        map.visible_areas.push(fix_rect(new_area));
+        send_map();
+      }
+    }
+  }
+}
+
+function fix_rect(rect) {
+  if (rect[2] < 0) {
+    rect[0] += rect[2];
+    rect[2] = -rect[2];
+  }
+  if (rect[3] < 0) {
+    rect[1] += rect[3];
+    rect[3] = -rect[3];
+  }
+  return rect;
 }
 
 function to_canvas_x(x) {
@@ -511,7 +609,7 @@ function canvas_click(event) {
       size: toInt($('#unit-size').value),
       color: $('#unit-color').value,
       symbol: $('#unit-symbol').value,
-      hp: toInt($('#unit-hp').value || $("#unit-max-hp").value),
+      hp: toInt($('#unit-hp').value || $('#unit-max-hp').value),
       max_hp: toInt($('#unit-max-hp').value),
     });
     send_map();
@@ -542,6 +640,30 @@ function canvas_click(event) {
       $('#unit-symbol').value = map.units[selected_unit].symbol;
       $('#unit-hp').value = map.units[selected_unit].hp;
       $('#unit-max-hp').value = map.units[selected_unit].max_hp;
+    }
+  } else if (map_action === 'visibility') {
+    if (selected_corner < 0) {
+      const click_x = to_canvas_x(event.offsetX);
+      const click_y = to_canvas_y(event.offsetY);
+
+      selected_unit = -1;
+      for (const i in map.visible_areas) {
+        const [x, y, w, h] = map.visible_areas[i];
+        if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+          selected_unit = i;
+          break;
+        }
+      }
+    } else {
+      const [x, y, w, h] = map.visible_areas[selected_unit];
+      if (w == 0 || h == 0) {
+        map.visible_areas.splice(selected_unit, 1);
+        selected_unit = -1;
+      }
+      selected_corner = -1;
+    }
+    if (selected_unit >= 0) {
+      send_map();
     }
   }
   requestAnimationFrame(renderMap);
@@ -579,6 +701,19 @@ function canvas_rightclick(event) {
       const unit = map.units[i];
       if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
         map.units.splice(i, 1);
+        selected_unit = -1;
+        send_map();
+        break;
+      }
+    }
+  } else if (map_action === 'visibility') {
+    const click_x = to_canvas_x(event.offsetX);
+    const click_y = to_canvas_y(event.offsetY);
+    for (const i in map.visible_areas) {
+      const [x, y, w, h] = map.visible_areas[i];
+      if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+        map.visible_areas.splice(i, 1);
+        selected_unit = -1;
         send_map();
         break;
       }
@@ -643,6 +778,44 @@ function canvas_mousemove(event) {
     map.offset_y += new_y - last_y;
     last_x = new_x;
     last_y = new_y;
+  } else if (
+    map_action === 'visibility' &&
+    event.type !== 'touchmove' &&
+    dragging &&
+    selected_unit >= 0
+  ) {
+    let [x, y, w, h] = map.visible_areas[selected_unit];
+    const new_x = align_to_grid(to_canvas_x(mouse_x));
+    const new_y = align_to_grid(to_canvas_y(mouse_y));
+
+    switch (selected_corner) {
+      case '0':
+        w += x - new_x;
+        h += y - new_y;
+        x = new_x;
+        y = new_y;
+        break;
+      case '1':
+        w = new_x - x;
+        h += y - new_y;
+        y = new_y;
+        break;
+      case '2':
+        w += x - new_x;
+        h = new_y - y;
+        x = new_x;
+        break;
+      case '3':
+        w = new_x - x;
+        h = new_y - y;
+        break;
+      default:
+        x += new_x - align_to_grid(to_canvas_x(dragstart_x));
+        y += new_y - align_to_grid(to_canvas_y(dragstart_y));
+        dragstart_x = new_x;
+        dragstart_y = new_y;
+    }
+    map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
   }
 
   requestAnimationFrame(renderMap);
@@ -697,6 +870,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const { width, height } = canvas.getBoundingClientRect();
   canvas.width = width;
   canvas.height = height;
+  visibility_canvas = document.createElement('canvas');
+  visibility_canvas.width = width;
+  visibility_canvas.height = height;
 
   canvas.addEventListener('mousedown', canvas_mousedown);
   canvas.addEventListener('touchstart', canvas_mousedown);
@@ -737,10 +913,14 @@ document.addEventListener('DOMContentLoaded', function() {
       $$('.map-actions .toggle').forEach(e => e.classList.remove('active'));
       e.target.classList.add('active');
       map_action = e.target.dataset['action'];
+
       if (map_action === 'units') canvas.classList.add('hide-cursor');
       else canvas.classList.remove('hide-cursor');
+
       last_x = last_y = 0;
       selected_unit = -1;
+
+      requestAnimationFrame(renderMap);
     })
   );
   for (const attr of ['size', 'color', 'symbol', 'hp', 'max-hp']) {

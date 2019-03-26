@@ -168,6 +168,7 @@ class Map:
         self.grid_x = json.get("grid_x", 0)
         self.grid_y = json.get("grid_y", 0)
         self.units = [Unit(u) for u in json.get("units", [])]
+        self.visible_areas = json.get("visible_areas", [])
 
     def update(self, data):
         if "lines" in data:
@@ -182,6 +183,8 @@ class Map:
             self.grid_y = data["grid_y"]
         if "units" in data:
             self.units = [Unit(u) for u in data["units"]]
+        if "visible_areas" in data:
+            self.visible_areas = data["visible_areas"]
 
     def to_json(self):
         return {
@@ -191,6 +194,7 @@ class Map:
             "grid_x": self.grid_x,
             "grid_y": self.grid_y,
             "units": [u.to_json() for u in self.units],
+            "visible_areas": self.visible_areas,
         }
 
 
