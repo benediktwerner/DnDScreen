@@ -90,7 +90,7 @@ async def _handle_add_player(ws, **player):
 
 
 async def _handle_update_player(ws, id, values):
-    data.player[id].update(values)
+    data.players[id].update(values)
     await send_all(data)
 
 
