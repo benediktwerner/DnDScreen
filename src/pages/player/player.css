@@ -45,7 +45,7 @@ canvas#effects {
 }
 .player.two {
   right: 0;
-  top: calc(50vh - 60px);
+  top: calc(50vh - 120px / 2);
   bottom: calc(50vh - 60px);
   transform: rotate(-90deg);
   margin-right: calc(((100vh - 2 * 180px) - 120px) / -2);
@@ -223,7 +223,7 @@ table {
 #grid-opacity {
   position: fixed;
   top: calc(50vh - 15px);
-  right: calc(120px + 100px - (100vh - 2 * 180px) / 2);
+  right: calc(120px + 30px - (100vh - 2 * 180px) / 2);
   bottom: calc(50vh - 15px);
   width: calc(100vh - 2 * 180px);
   transform: rotate(-90deg);
@@ -231,23 +231,23 @@ table {
 
 button.btn-bottom-left {
   position: fixed;
-  left:5px;
+  left: 55px;
   bottom: 5px;
   background: none;
   font-size: 2rem;
   font-weight: 700;
   padding: 5px;
   line-height: 1;
-  color: rgba(0,0,0,0.1);
+  color: rgba(0, 0, 0, 0.1);
   box-shadow: none;
 }
 
 .initiative-bar {
   position: fixed;
   top: calc(50vh - 25px);
-  right: calc(120px + 40px - (100vh - 2 * 180px) / 2);
+  left: calc(25px - 100vh / 2);
   bottom: calc(50vh - 25px);
-  width: calc(100vh - 2 * 180px);
+  width: 100vh;
   transform: rotate(-90deg);
   height: 50px;
   background-color: white;

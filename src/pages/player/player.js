@@ -19,10 +19,14 @@ function toInt(val) {
 ///////////////
 ///////////////
 
-const ws = new WebSocket('ws://' + window.location.host + '/player_socket');
+let ws = new WebSocket('ws://' + window.location.host + '/player_socket');
 
 ws.onopen = function() {
   ws.send('init');
+};
+
+ws.onclose = function() {
+  ws = new WebSocket('ws://' + window.location.host + '/player_socket');
 };
 
 ws.onmessage = function(e) {
@@ -44,8 +48,9 @@ ws.onmessage = function(e) {
         pEl.classList.remove('hidden');
         for (const key in p) {
           if (key === 'cls') continue;
-          const el = pEl.$(key);
-          if (!el.classList.contains('currency')) el.innerText = p[key];
+          for (const el of pEl.getElementsByClassName(key)) {
+            if (!el.classList.contains('currency')) el.innerText = p[key];
+          }
         }
       }
     }
@@ -176,7 +181,13 @@ let playerCount;
 let targets;
 let particleType;
 
-const DIFFS = [[-1, 0], [1, 0], [0, 0], [0, 1], [0, -1]];
+const DIFFS = [
+  [-1, 0],
+  [1, 0],
+  [0, 0],
+  [0, 1],
+  [0, -1],
+];
 
 class Particle {
   constructor(x, y, dest, center, img = null) {

@@ -235,7 +235,7 @@ class Initiative:
     def update(self, data):
         self.activeIndex = 0
         self.units = [InitiativeUnit(u) for u in data]
-        self.units.sort(key=lambda u: u.initiative)
+        self.units.sort(key=lambda u: u.initiative, reverse=True)
 
     def to_json(self):
         return {

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import base64
 import os
 import sys
 import webbrowser
@@ -9,8 +8,6 @@ import aiohttp
 from aiohttp import web
 
 import ws_handler
-
-DM_PASSWORD = base64.b64encode(b"1337dm").decode().replace("=", "")
 
 
 def redirect_handler(target):
@@ -32,10 +29,12 @@ async def player_socket_handler(request):
             else:
                 await ws_handler.handle_player(ws, msg.data)
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            print(f"Player websocket closed with exception {ws.exception()}")
+            print("Player websocket closed with exception:")
+            print(ws.exception())
 
     ws_handler.player_websockets.remove(ws)
     print("Player websocket closed")
+
     return ws
 
 
@@ -51,10 +50,12 @@ async def dm_socket_handler(request):
             else:
                 await ws_handler.handle_dm(ws, msg.data)
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            print(f"DM websocket closed with exception {ws.exception()}")
+            print("DM websocket closed with exception:")
+            print(ws.exception())
 
     ws_handler.dm_websockets.remove(ws)
     print("DM websocket closed")
+
     return ws
 
 

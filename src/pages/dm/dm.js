@@ -32,6 +32,7 @@ function openWebsocket() {
   ws = new WebSocket(`ws://${window.location.host}/dm_socket`);
 
   ws.onopen = onWebsocketInit;
+  ws.onclose = () => addMessage("WebSocket closed");
   ws.onmessage = onWebsocketMessage;
 }
 
@@ -122,7 +123,7 @@ function onWebsocketMessage(e) {
 
 function send(type, data) {
   if (ws.readyState !== WebSocket.OPEN) {
-    addMessage('WebSocket geschlossen');
+    addMessage('WebSocket ist geschlossen');
     return;
   }
   if (data === undefined) {

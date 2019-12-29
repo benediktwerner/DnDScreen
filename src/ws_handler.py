@@ -20,7 +20,7 @@ async def send(ws, data):
         data = {"type": "msg", "data": data}
     elif isinstance(data, Data):
         data = {"type": "data", "data": data.to_json()}
-    print("Sending:", data)
+
     await ws.send_str(json.dumps(data))
 
 
@@ -50,14 +50,13 @@ async def handle_player(ws, msg):
         msg_type, msg_data = msg["type"], msg["data"]
 
         if msg_type == "move-unit":
-            _handle_move_unit(ws, **msg_data)
-
-        return
+            await _handle_move_unit(ws, **msg_data)
+        else:
+            await send(ws, f"Invalid msg type: '{msg_type}'")
     elif msg in ("init", "update"):
         await send(ws, data)
-        return
-
-    await send(ws, f"Error: Invalid msg '{msg}'")
+    else:
+        await send(ws, f"Error: Invalid msg '{msg}'")
 
 
 async def _handle_init(ws):
