@@ -452,8 +452,9 @@ function drawLines() {
     drawLine(...line);
   }
   if (map_action === 'draw' && (last_x !== 0 || last_y !== 0))
-    drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
-  ctx.lineWidth = 2;
+  drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
+  ctx.strokeStyle = 'red';
+  ctx.lineWidth = 3;
   ctx.stroke();
   ctx.lineWidth = 1;
 }
@@ -514,7 +515,7 @@ function renderMap() {
   drawUnits();
   ctx.restore();
 
-  drawVisibility();
+  if (map.visible_areas.length > 0 || map_action === 'visibility') drawVisibility();
 }
 
 function canvas_mousedown(event) {
