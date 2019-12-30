@@ -18,7 +18,7 @@ def redirect_handler(target):
 
 
 async def player_socket_handler(request):
-    ws = web.WebSocketResponse()
+    ws = web.WebSocketResponse(heartbeat=30)
     await ws.prepare(request)
     ws_handler.player_websockets.append(ws)
 
@@ -40,7 +40,7 @@ async def player_socket_handler(request):
 
 
 async def dm_socket_handler(request):
-    ws = web.WebSocketResponse()
+    ws = web.WebSocketResponse(heartbeat=30)
     await ws.prepare(request)
     ws_handler.dm_websockets.append(ws)
 
