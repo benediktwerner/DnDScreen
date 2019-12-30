@@ -235,3 +235,8 @@ button.toggle.active {
 .hide-cursor {
   cursor: none;
 }
+
+input[type="checkbox"] {
+  width: 30px;
+  display: initial;
+}

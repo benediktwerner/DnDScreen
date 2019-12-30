@@ -273,3 +273,9 @@ button.btn-bottom-left {
   opacity: 0.5;
   margin-top: -3px;
 }
+
+#msg {
+  position: fixed;
+  bottom: 0;
+  left: 115px;
+}

@@ -163,6 +163,7 @@ class Player:
 class Map:
     def __init__(self, json):
         self.bg_image = json.get("bg_image", TRANSPARENT_BG)
+        self.bg_dm_only = json.get("bg_dm_only", False)
         self.lines = json.get("lines", [])
         self.grid_size = json.get("grid_size", 20)
         self.grid_x = json.get("grid_x", 0)
@@ -175,6 +176,8 @@ class Map:
             self.lines = data["lines"]
         if "bg_image" in data:
             self.bg_image = data["bg_image"]
+        if "bg_dm_only" in data:
+            self.bg_dm_only = data["bg_dm_only"]
         if "grid_size" in data:
             self.grid_size = data["grid_size"]
         if "grid_x" in data:
@@ -189,6 +192,7 @@ class Map:
     def to_json(self):
         return {
             "bg_image": self.bg_image,
+            "bg_dm_only": self.bg_dm_only,
             "lines": self.lines,
             "grid_size": self.grid_size,
             "grid_x": self.grid_x,

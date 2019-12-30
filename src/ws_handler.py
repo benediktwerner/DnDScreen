@@ -21,7 +21,11 @@ async def send(ws, data):
     elif isinstance(data, Data):
         data = {"type": "data", "data": data.to_json()}
 
-    await ws.send_str(json.dumps(data))
+    try:
+        await ws.send_str(json.dumps(data))
+    except Exception as e:
+        print("Exception during send:")
+        print(e)
 
 
 async def send_dm(msg):

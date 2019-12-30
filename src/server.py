@@ -22,18 +22,19 @@ async def player_socket_handler(request):
     await ws.prepare(request)
     ws_handler.player_websockets.append(ws)
 
-    async for msg in ws:
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            if msg.data == "close":
-                await ws.close()
-            else:
-                await ws_handler.handle_player(ws, msg.data)
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            print("Player websocket closed with exception:")
-            print(ws.exception())
-
-    ws_handler.player_websockets.remove(ws)
-    print("Player websocket closed")
+    try:
+        async for msg in ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                if msg.data == "close":
+                    await ws.close()
+                else:
+                    await ws_handler.handle_player(ws, msg.data)
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                print("Player websocket closed with exception:")
+                print(ws.exception())
+    finally:
+        ws_handler.player_websockets.remove(ws)
+        print("Player websocket closed")
 
     return ws
 
@@ -43,18 +44,19 @@ async def dm_socket_handler(request):
     await ws.prepare(request)
     ws_handler.dm_websockets.append(ws)
 
-    async for msg in ws:
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            if msg.data == "close":
-                await ws.close()
-            else:
-                await ws_handler.handle_dm(ws, msg.data)
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            print("DM websocket closed with exception:")
-            print(ws.exception())
-
-    ws_handler.dm_websockets.remove(ws)
-    print("DM websocket closed")
+    try:
+        async for msg in ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                if msg.data == "close":
+                    await ws.close()
+                else:
+                    await ws_handler.handle_dm(ws, msg.data)
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                print("DM websocket closed with exception:")
+                print(ws.exception())
+    finally:
+        ws_handler.dm_websockets.remove(ws)
+        print("DM websocket closed")
 
     return ws
 

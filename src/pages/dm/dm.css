@@ -151,7 +151,7 @@ canvas {
 
 #map-more {
   overflow: hidden;
-  max-height: 200px;
+  max-height: 250px;
   transition: max-height 500ms ease-in-out;
 }
 #map-more.collapsed {

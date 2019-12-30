@@ -32,7 +32,7 @@ function openWebsocket() {
   ws = new WebSocket(`ws://${window.location.host}/dm_socket`);
 
   ws.onopen = onWebsocketInit;
-  ws.onclose = () => addMessage("WebSocket closed");
+  ws.onclose = () => addMessage('WebSocket closed');
   ws.onmessage = onWebsocketMessage;
 }
 
@@ -137,6 +137,7 @@ function send(type, data) {
 
 function send_map(bg_image_url) {
   const data = {
+    bg_dm_only: map.bg_dm_only,
     lines: map.lines,
     grid_size: map.grid_size,
     grid_x: map.grid_x,
@@ -346,6 +347,7 @@ function confirm(action) {
 /////////
 
 const TWO_PI = Math.PI * 2;
+const HANDLE_RADIUS = 10;
 
 let canvas;
 let ctx;
@@ -362,6 +364,7 @@ let selected_corner = -1;
 let maps = [];
 let map = {
   bg_image: new Image(),
+  bg_dm_only: false,
   offset_x: 0,
   offset_y: 0,
   zoom: 1,
@@ -468,20 +471,22 @@ function drawVisibility() {
   for (const area of map.visible_areas) {
     vctx.clearRect(...area);
   }
-  if (dragging && selected_unit < 0) {
-    vctx.clearRect(
-      align_to_grid(to_canvas_x(dragstart_x)),
-      align_to_grid(to_canvas_y(dragstart_y)),
-      align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
-      align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y))
-    );
-  } else if (selected_unit >= 0) {
-    const [x, y, w, h] = map.visible_areas[selected_unit];
-    vctx.fillStyle = 'black';
-    vctx.fillCircle(x, y, 5, vctx);
-    vctx.fillCircle(x + w, y, 5, vctx);
-    vctx.fillCircle(x, y + h, 5, vctx);
-    vctx.fillCircle(x + w, y + h, 5, vctx);
+  if (map_action === 'visibility') {
+    if (dragging && selected_unit < 0) {
+      vctx.clearRect(
+        align_to_grid(to_canvas_x(dragstart_x)),
+        align_to_grid(to_canvas_y(dragstart_y)),
+        align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
+        align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y))
+      );
+    } else if (selected_unit >= 0) {
+      const [x, y, w, h] = map.visible_areas[selected_unit];
+      vctx.fillStyle = 'black';
+      vctx.fillCircle(x, y, HANDLE_RADIUS, vctx);
+      vctx.fillCircle(x + w, y, HANDLE_RADIUS, vctx);
+      vctx.fillCircle(x, y + h, HANDLE_RADIUS, vctx);
+      vctx.fillCircle(x + w, y + h, HANDLE_RADIUS, vctx);
+    }
   }
   vctx.restore();
 
@@ -499,16 +504,17 @@ function renderMap() {
   ctx.scale(map.zoom, map.zoom);
 
   if (map.bg_image.src !== null) {
+    ctx.save();
+    ctx.translate(map.grid_x, map.grid_y);
     ctx.drawImage(map.bg_image, 0, 0);
+    ctx.restore();
   }
   drawLines();
   drawGrid();
   drawUnits();
   ctx.restore();
 
-  if (map_action === 'visibility') {
-    drawVisibility();
-  }
+  drawVisibility();
 }
 
 function canvas_mousedown(event) {
@@ -526,10 +532,15 @@ function canvas_mousedown(event) {
 
     if (selected_unit >= 0) {
       const [x, y, w, h] = map.visible_areas[selected_unit];
-      const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+      const corners = [
+        [x, y],
+        [x + w, y],
+        [x, y + h],
+        [x + w, y + h],
+      ];
       for (const i in corners) {
         const [cx, cy] = corners[i];
-        if ((cx - click_x) ** 2 + (cy - click_y) ** 2 <= 25) {
+        if ((cx - click_x) ** 2 + (cy - click_y) ** 2 <= HANDLE_RADIUS ** 2) {
           selected_corner = i;
           return;
         }
@@ -710,15 +721,23 @@ function canvas_rightclick(event) {
   } else if (map_action === 'visibility') {
     const click_x = to_canvas_x(event.offsetX);
     const click_y = to_canvas_y(event.offsetY);
-    for (const i in map.visible_areas) {
-      const [x, y, w, h] = map.visible_areas[i];
+    if (selected_unit >= 0) {
+      const [x, y, w, h] = map.visible_areas[selected_unit];
       if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
-        map.visible_areas.splice(i, 1);
-        selected_unit = -1;
+        map.visible_areas.splice(selected_unit, 1);
         send_map();
-        break;
+      }
+    } else {
+      for (const i in map.visible_areas) {
+        const [x, y, w, h] = map.visible_areas[i];
+        if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+          map.visible_areas.splice(i, 1);
+          send_map();
+          break;
+        }
       }
     }
+    selected_unit = -1;
   }
   requestAnimationFrame(renderMap);
 }
@@ -813,8 +832,8 @@ function canvas_mousemove(event) {
       default:
         x += new_x - align_to_grid(to_canvas_x(dragstart_x));
         y += new_y - align_to_grid(to_canvas_y(dragstart_y));
-        dragstart_x = new_x;
-        dragstart_y = new_y;
+        dragstart_x = mouse_x;
+        dragstart_y = mouse_y;
     }
     map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
   }
@@ -890,20 +909,25 @@ document.addEventListener('DOMContentLoaded', function() {
     send_map(e.target.value);
   });
   $('#grid-size').addEventListener('input', e => {
-    if (e.target.value && parseFloat(e.target.value) >= 10)
+    if (e.target.value && parseFloat(e.target.value) >= 10) {
       map.grid_size = parseFloat(e.target.value);
-    send_map();
-    requestAnimationFrame(renderMap);
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
   });
   $('#grid-x').addEventListener('input', e => {
-    if (e.target.value) map.grid_x = parseFloat(e.target.value);
-    send_map();
-    requestAnimationFrame(renderMap);
+    if (e.target.value) {
+      map.grid_x = parseFloat(e.target.value);
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
   });
   $('#grid-y').addEventListener('input', e => {
-    if (e.target.value) map.grid_y = parseFloat(e.target.value);
-    send_map();
-    requestAnimationFrame(renderMap);
+    if (e.target.value) {
+      map.grid_y = parseFloat(e.target.value);
+      send_map();
+      requestAnimationFrame(renderMap);
+    }
   });
   $('#grid-opacity').addEventListener('input', e => {
     map.grid_opacity = toInt(e.target.value);
@@ -946,6 +970,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   $('.initiative-bar').addEventListener('click', () => send('next-initiative'));
+  $('#map-bg-dm-only').addEventListener('click', e => {
+    map.bg_dm_only = e.target.checked;
+    send_map();
+  });
 
   map.bg_image.onload = () => requestAnimationFrame(renderMap);
 });

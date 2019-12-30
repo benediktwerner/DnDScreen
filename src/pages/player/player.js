@@ -19,72 +19,81 @@ function toInt(val) {
 ///////////////
 ///////////////
 
-let ws = new WebSocket('ws://' + window.location.host + '/player_socket');
+let ws;
+let reconnect_attempts = 0;
 
-ws.onopen = function() {
-  ws.send('init');
-};
+reconnect();
 
-ws.onclose = function() {
+function reconnect() {
+  $('#msg').innerText = 'Disconnected. Reconnecting in 2s ... (' + reconnect_attempts + ')';
+  reconnect_attempts += 1;
   ws = new WebSocket('ws://' + window.location.host + '/player_socket');
-};
 
-ws.onmessage = function(e) {
-  const { data, type } = JSON.parse(e.data);
+  ws.onopen = function() {
+    ws.send('init');
+    $('#msg').innerText = '';
+    reconnect_attempts = 0;
+  };
 
-  if (type === 'msg') {
-    alert(data);
-  } else if (type === 'data') {
-    if (data.players) {
-      for (const i of [0, 1, 2]) {
-        const p = data.players[i];
-        const pEl = $('#player-' + i);
+  ws.onclose = () => setTimeout(reconnect, 2000);
 
-        if (p === undefined) {
-          pEl.classList.add('hidden');
-          continue;
-        }
+  ws.onmessage = function(e) {
+    const { data, type } = JSON.parse(e.data);
 
-        pEl.classList.remove('hidden');
-        for (const key in p) {
-          if (key === 'cls') continue;
-          for (const el of pEl.getElementsByClassName(key)) {
-            if (!el.classList.contains('currency')) el.innerText = p[key];
+    if (type === 'msg') {
+      alert(data);
+    } else if (type === 'data') {
+      if (data.players) {
+        for (const i of [0, 1, 2]) {
+          const p = data.players[i];
+          const pEl = $('#player-' + i);
+
+          if (p === undefined) {
+            pEl.classList.add('hidden');
+            continue;
+          }
+
+          pEl.classList.remove('hidden');
+          for (const key in p) {
+            if (key === 'cls') continue;
+            for (const el of pEl.getElementsByClassName(key)) {
+              if (!el.classList.contains('currency')) el.innerText = p[key];
+            }
           }
         }
       }
-    }
-    if (data.map) {
-      updateMapData(data.map);
-    }
-    if (data.initiative) {
-      $$('.initiative-bar .initiative-cell').forEach(el => el.remove());
-      const template = $('#initiative-cell-template');
-
-      for (const unit of data.initiative.units) {
-        const newEl = template.content.cloneNode(true);
-        newEl.firstElementChild.$('name').innerText = unit.name;
-        newEl.firstElementChild.$('initiative').innerText = unit.initiative;
-        $('.initiative-bar').appendChild(newEl);
+      if (data.map) {
+        updateMapData(data.map);
       }
+      if (data.initiative) {
+        $$('.initiative-bar .initiative-cell').forEach(el => el.remove());
+        const template = $('#initiative-cell-template');
 
-      const activeIndex = data.initiative.activeIndex + 1;
-      $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
-    }
-  } else if (type === 'reward') {
-    if (data.xp > 0) {
-      showRewardXpDialog(data.xp);
+        for (const unit of data.initiative.units) {
+          const newEl = template.content.cloneNode(true);
+          newEl.firstElementChild.$('name').innerText = unit.name;
+          newEl.firstElementChild.$('initiative').innerText = unit.initiative;
+          $('.initiative-bar').appendChild(newEl);
+        }
+
+        const activeIndex = data.initiative.activeIndex + 1;
+        $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
+      }
+    } else if (type === 'reward') {
+      if (data.xp > 0) {
+        showRewardXpDialog(data.xp);
+      } else {
+        delete data.xp;
+        showRewardMoneyDialog(data);
+      }
+    } else if (type === 'initiative-index') {
+      $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
+      $(`.initiative-bar .initiative-cell:nth-child(${data + 1})`).classList.add('active');
     } else {
-      delete data.xp;
-      showRewardMoneyDialog(data);
+      alert(`Invalid message type: ${type}\n${JSON.stringify(data)}`);
     }
-  } else if (type === 'initiative-index') {
-    $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
-    $(`.initiative-bar .initiative-cell:nth-child(${data + 1})`).classList.add('active');
-  } else {
-    alert(`Invalid message type: ${type}\n${JSON.stringify(data)}`);
-  }
-};
+  };
+}
 
 function send(type, data) {
   if (data === undefined) {
@@ -497,6 +506,7 @@ let last_touches;
 let selected_unit = -1;
 let map = {
   bg_image: new Image(),
+  bg_dm_only: false,
   offset_x: 0,
   offset_y: 0,
   zoom: 1,
@@ -513,6 +523,7 @@ function updateMapData(data) {
   map.lines = data.lines;
   map.units = data.units;
   map.bg_image.src = data.bg_image;
+  map.bg_dm_only = data.bg_dm_only;
   map.grid_size = data.grid_size;
   map.grid_x = data.grid_x;
   map.grid_y = data.grid_y;
@@ -606,8 +617,11 @@ function renderMap() {
   mapCtx.translate(map.offset_x, map.offset_y);
   mapCtx.scale(map.zoom, map.zoom);
 
-  if (map.bg_image.src !== null) {
+  if (map.bg_image.src !== null && !map.bg_dm_only) {
+    mapCtx.save();
+    mapCtx.translate(map.grid_x, map.grid_y);
     mapCtx.drawImage(map.bg_image, 0, 0);
+    mapCtx.restore();
   }
   drawLines();
   drawGrid();

@@ -65,7 +65,9 @@
 
         <h2>Karte <button type="button" class="btn-more">Mehr</button></h2>
         <div class="input-row map-actions">
-          <button type="button" class="toggle active" data-action="move" title="Bewegen/Bearbeiten">B</button>
+          <button type="button" class="toggle active" data-action="move" title="Bewegen/Bearbeiten">
+            B
+          </button>
           <button type="button" class="toggle" data-action="draw" title="Zeichnen">Z</button>
           <button type="button" class="toggle" data-action="units" title="Einheiten">E</button>
           <button type="button" class="toggle" data-action="visibility" title="Sicht">S</button>
@@ -86,11 +88,11 @@
             <option value="#ff77aa" style="color: #ff77aa">Pink</option>
             <option value="#9400d3" style="color: #9400d3">Lila</option>
           </select>
-          <input id="unit-symbol" class="small fix-font" />
+          <input type="text" id="unit-symbol" class="small fix-font" />
         </div>
         <div class="input-row margin-bottom">
-          <input type="number" id="unit-hp" />
-          <input type="number" id="unit-max-hp" />
+          <input type="number" id="unit-hp" placeholder="Hp" />
+          <input type="number" id="unit-max-hp" placeholder="Max HP" />
         </div>
 
         <div id="map-more" class="collapsed">
@@ -102,6 +104,7 @@
               >Kein Hintergrund</option
             >
           </select>
+          <label><input type="checkbox" id="map-bg-dm-only" />Nur DM</label>
           <div class="input-row margin-bottom">
             <input id="grid-x" type="number" value="0" />
             <input id="grid-y" type="number" value="0" />
