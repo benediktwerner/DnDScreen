@@ -77,7 +77,8 @@ function reconnect() {
         }
 
         const activeIndex = data.initiative.activeIndex + 1;
-        $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
+        const activeItem = $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`);
+        if (activeItem) activeItem.classList.add('active');
       }
     } else if (type === 'reward') {
       if (data.xp > 0) {

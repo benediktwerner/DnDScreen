@@ -112,7 +112,8 @@ function onWebsocketMessage(e) {
       }
 
       const activeIndex = data.initiative.activeIndex + 1;
-      $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`).classList.add('active');
+      const activeUnit = $(`.initiative-bar .initiative-cell:nth-child(${activeIndex})`);
+      if (activeUnit) activeUnit.classList.add('active');
     }
     closeDialog();
   } else if (type === 'initiative-index') {
