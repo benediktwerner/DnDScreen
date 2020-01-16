@@ -107,6 +107,7 @@ input::-webkit-inner-spin-button {
 }
 
 label {
+  display: flex;
   padding-top: calc(0.375rem + 1px);
   padding-bottom: calc(0.375rem + 1px);
   margin-bottom: 0;
@@ -243,7 +244,8 @@ button.toggle.active img {
 }
 
 input[type='checkbox'] {
-  height: initial;
+  height: 25px;
   width: 25px;
+  margin-right: 7px;
   display: initial;
 }
