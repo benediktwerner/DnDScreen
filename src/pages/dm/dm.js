@@ -941,6 +941,12 @@ function clearLines() {
   requestAnimationFrame(renderMap);
 }
 
+function clearVisibility() {
+  map.visible_areas = [];
+  send_map();
+  requestAnimationFrame(renderMap);
+}
+
 /////////////////////
 /////////////////////
 // Event Listeners //
