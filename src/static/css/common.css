@@ -242,7 +242,8 @@ button.toggle.active img {
   cursor: none;
 }
 
-input[type="checkbox"] {
-  width: 30px;
+input[type='checkbox'] {
+  height: initial;
+  width: 25px;
   display: initial;
 }
