@@ -610,8 +610,8 @@ function canvas_mousedown(event) {
   mouse_button = event.button || 0;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
-  dragstart_x = event.offsetX;
-  dragstart_y = event.offsetY;
+  dragstart_x = event.offsetX || event.touches[0].pageX - canvas.offsetLeft;
+  dragstart_y = event.offsetY || event.touches[0].pageY - canvas.offsetTop;
   last_touches = event.touches;
 
   const click_x = to_canvas_x(dragstart_x);
@@ -647,12 +647,15 @@ function canvas_mousedown(event) {
 function canvas_mouseup(event) {
   dragging = false;
 
+  const x = to_canvas_x(event.offsetX || event.changedTouches[0].pageX - canvas.offsetLeft);
+  const y = to_canvas_y(event.offsetY || event.changedTouches[0].pageY - canvas.offsetTop);
+
   if (map_action === 'draw' && mouse_button === 0) {
     if (selected_unit === null) {
       const x1 = align_to_grid(to_canvas_x(dragstart_x));
       const y1 = align_to_grid(to_canvas_y(dragstart_y));
-      const x2 = align_to_grid(to_canvas_x(event.offsetX));
-      const y2 = align_to_grid(to_canvas_y(event.offsetY));
+      const x2 = align_to_grid(x);
+      const y2 = align_to_grid(y);
       if (x1 !== x2 || y1 !== y2) {
         map.lines.push([x1, y1, x2, y2]);
         send_map();
@@ -670,8 +673,8 @@ function canvas_mouseup(event) {
       const new_area = [
         align_to_grid(to_canvas_x(dragstart_x)),
         align_to_grid(to_canvas_y(dragstart_y)),
-        align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
-        align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y)),
+        align_to_grid(x - to_canvas_x(dragstart_x)),
+        align_to_grid(y - to_canvas_y(dragstart_y)),
       ];
       if (new_area[2] != 0 && new_area[3] != 0) {
         map.visible_areas.push(fix_rect(new_area));
@@ -686,6 +689,8 @@ function canvas_mouseup(event) {
       send_map();
     }
   }
+
+  requestAnimationFrame(renderMap);
 }
 
 function canvas_click(event) {
@@ -741,8 +746,8 @@ function canvas_click(event) {
 function canvas_rightclick(event) {
   event.preventDefault();
 
-  const x = to_canvas_x(event.offsetX);
-  const y = to_canvas_y(event.offsetY);
+  let x = to_canvas_x(event.offsetX);
+  let y = to_canvas_y(event.offsetY);
 
   if (map_action === 'move') {
     x = Math.floor(x / map.grid_size);
@@ -777,6 +782,7 @@ function canvas_rightclick(event) {
 
 function canvas_keyup(event) {
   event.preventDefault();
+
   if (map_action === 'draw' && event.key === 'Escape') {
     dragging = false;
   } else if (event.key === 'r') {
@@ -784,16 +790,18 @@ function canvas_keyup(event) {
     map.offset_y = 0;
     map.zoom = 1;
   }
+
   requestAnimationFrame(renderMap);
 }
 
 function canvas_mousemove(event) {
-  mouse_x = event.offsetX;
-  mouse_y = event.offsetY;
+  event.preventDefault();
+
+  mouse_x = event.offsetX || event.touches[0].pageX - canvas.offsetLeft;
+  mouse_y = event.offsetY || event.touches[0].pageY - canvas.offsetTop;
 
   if (dragging) {
     if (map_action === 'move' || mouse_button === 1) {
-      event.preventDefault();
 
       let new_x, new_y;
 
