@@ -52,7 +52,7 @@
 
       <div class="middle-section">
         <div class="initiative-bar"></div>
-        <canvas></canvas>
+        <canvas class="move"></canvas>
       </div>
 
       <div class="sidebar">
@@ -66,11 +66,14 @@
         <h2>Karte <button type="button" class="btn-more">Mehr</button></h2>
         <div class="input-row map-actions">
           <button type="button" class="toggle active" data-action="move" title="Bewegen/Bearbeiten">
-            B
+            <img src="/img/icons/move.svg" />
           </button>
-          <button type="button" class="toggle" data-action="draw" title="Zeichnen">Z</button>
-          <button type="button" class="toggle" data-action="units" title="Einheiten">E</button>
-          <button type="button" class="toggle" data-action="visibility" title="Sicht">S</button>
+          <button type="button" class="toggle" data-action="draw" title="Zeichnen">
+            <img src="/img/icons/draw.svg" /></button>
+          <button type="button" class="toggle" data-action="units" title="Einheiten">
+            <img src="/img/icons/person.svg" /></button>
+          <button type="button" class="toggle" data-action="visibility" title="Sicht">
+            <img src="/img/icons/visibility.svg" /></button>
         </div>
         <div class="input-row">
           <input id="unit-size" class="small" type="number" min="1" max="5" value="1" />

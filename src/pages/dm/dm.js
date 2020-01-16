@@ -937,11 +937,14 @@ document.addEventListener('DOMContentLoaded', function() {
   $$('.map-actions .toggle').forEach(el =>
     el.addEventListener('click', e => {
       $$('.map-actions .toggle').forEach(e => e.classList.remove('active'));
-      e.target.classList.add('active');
-      map_action = e.target.dataset['action'];
 
-      if (map_action === 'units') canvas.classList.add('hide-cursor');
-      else canvas.classList.remove('hide-cursor');
+      let target = e.target;
+      while (target.tagName !== "BUTTON") target = target.parentElement;
+
+      target.classList.add('active');
+      canvas.classList.remove(map_action);
+      map_action = target.dataset['action'];
+      canvas.classList.add(map_action);
 
       last_x = last_y = 0;
       selected_unit = -1;

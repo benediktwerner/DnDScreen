@@ -231,6 +231,12 @@ button.toggle.active {
   font-weight: 600;
   color: #9b2a17;
 }
+button.toggle img {
+  filter: invert(89%) sepia(11%) saturate(567%) hue-rotate(325deg) brightness(113%) contrast(96%);
+}
+button.toggle.active img {
+  filter: invert(22%) sepia(87%) saturate(1747%) hue-rotate(347deg) brightness(80%) contrast(97%);
+}
 
 .hide-cursor {
   cursor: none;
