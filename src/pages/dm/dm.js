@@ -657,7 +657,14 @@ function canvas_mouseup(event) {
         map.lines.push([x1, y1, x2, y2]);
         send_map();
       }
-    } else send_map();
+    } else {
+      const [x1, y1, x2, y2] = map.lines[selected_unit];
+      if (x1 === x2 && y1 === y2) {
+        map.lines.splice(selected_unit, 1);
+        selected_unit = null;
+      }
+      send_map();
+    }
   } else if (map_action === 'visibility' && mouse_button === 0) {
     if (selected_unit === null) {
       const new_area = [
@@ -670,6 +677,13 @@ function canvas_mouseup(event) {
         map.visible_areas.push(fix_rect(new_area));
         send_map();
       }
+    } else {
+      const [x, y, w, h] = map.visible_areas[selected_unit];
+      if (w == 0 || h == 0) {
+        map.visible_areas.splice(selected_unit, 1);
+        selected_unit = null;
+      }
+      send_map();
     }
   }
 }
@@ -838,13 +852,7 @@ function canvas_mousemove(event) {
           dragstart_x = mouse_x;
           dragstart_y = mouse_y;
       }
-      if (x1 === x2 && y1 === y2) {
-        map.lines.splice(selected_unit, 1);
-        send_map();
-        selected_unit = null;
-      } else {
-        map.lines[selected_unit] = [x1, y1, x2, y2];
-      }
+      map.lines[selected_unit] = [x1, y1, x2, y2];
     } else if (map_action === 'visibility' && selected_unit !== null) {
       let [x, y, w, h] = map.visible_areas[selected_unit];
       const new_x = align_to_grid(to_canvas_x(mouse_x));
@@ -876,13 +884,7 @@ function canvas_mousemove(event) {
           dragstart_x = mouse_x;
           dragstart_y = mouse_y;
       }
-      if (w === 0 || h === 0) {
-        map.visible_areas.splice(selected_unit, 1);
-        send_map();
-        selected_unit = null;
-      } else {
-        map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
-      }
+      map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
     }
   }
 
