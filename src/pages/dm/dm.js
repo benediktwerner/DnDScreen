@@ -618,7 +618,6 @@ function canvas_mousedown(event) {
   const click_y = to_canvas_y(dragstart_y);
 
   if (map_action === 'draw' && mouse_button === 0) {
-    selectLine(click_x, click_y);
     if (selected_unit !== null) {
       const [x1, y1, x2, y2] = map.lines[selected_unit];
       selectCorner(click_x, click_y, [
@@ -626,8 +625,10 @@ function canvas_mousedown(event) {
         [x2, y2],
       ]);
     }
+    if (selected_unit === null || selected_corner === null) {
+      selectLine(click_x, click_y);
+    }
   } else if (map_action === 'visibility' && mouse_button === 0) {
-    selectVisibilityArea(click_x, click_y);
     if (selected_unit !== null) {
       const [x, y, w, h] = map.visible_areas[selected_unit];
       selectCorner(click_x, click_y, [
@@ -636,6 +637,9 @@ function canvas_mousedown(event) {
         [x, y + h],
         [x + w, y + h],
       ]);
+    }
+    if (selected_unit === null || selected_corner === null) {
+      selectVisibilityArea(click_x, click_y);
     }
   }
 }
