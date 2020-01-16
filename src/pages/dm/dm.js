@@ -349,19 +349,20 @@ function confirm(action) {
 
 const TWO_PI = Math.PI * 2;
 const HANDLE_RADIUS = 10;
+const HANDLE_RADIUS_SQR = HANDLE_RADIUS ** 2;
 
 let canvas;
-let ctx;
+let ctx, vctx;
 let visibility_canvas;
 let dragging = false;
 let map_action = 'move';
-let last_x = 0;
-let last_y = 0;
+let last_x;
+let last_y;
 let dragstart_x, dragstart_y;
-let mouse_x, mouse_y;
+let mouse_x, mouse_y, mouse_button;
 let last_touches;
-let selected_unit = -1;
-let selected_corner = -1;
+let selected_unit = null;
+let selected_corner = null;
 let maps = [];
 let map = {
   bg_image: new Image(),
@@ -377,6 +378,80 @@ let map = {
   units: [],
   visible_areas: [],
 };
+
+function fix_rect(rect) {
+  if (rect[2] < 0) {
+    rect[0] += rect[2];
+    rect[2] = -rect[2];
+  }
+  if (rect[3] < 0) {
+    rect[1] += rect[3];
+    rect[3] = -rect[3];
+  }
+  return rect;
+}
+
+function to_canvas_x(x) {
+  return (x - map.offset_x) / map.zoom;
+}
+
+function to_canvas_y(y) {
+  return (y - map.offset_y) / map.zoom;
+}
+
+function dist2(x1, y1, x2, y2) {
+  return (x1 - x2) ** 2 + (y1 - y2) ** 2;
+}
+function distToLineSquared(x, y, line) {
+  const [lx1, ly1, lx2, ly2] = line;
+  const line_dist = dist2(lx1, ly1, lx2, ly2);
+
+  if (line_dist === 0) return dist2(x, y, lx1, ly1);
+
+  let t = ((x - lx1) * (lx2 - lx1) + (y - ly1) * (ly2 - ly1)) / line_dist;
+  t = Math.max(0, Math.min(1, t));
+  return dist2(x, y, lx1 + t * (lx2 - lx1), ly1 + t * (ly2 - ly1));
+}
+function distToLine(x, y, line) {
+  return Math.sqrt(distToLineSquared(x, y, line));
+}
+
+function selectCorner(x, y, corners) {
+  selected_corner = null;
+
+  for (const i in corners) {
+    const [cx, cy] = corners[i];
+    if ((cx - x) ** 2 + (cy - y) ** 2 <= HANDLE_RADIUS_SQR) {
+      selected_corner = i;
+      return;
+    }
+  }
+}
+
+function selectLine(x, y) {
+  let closest = HANDLE_RADIUS_SQR;
+  selected_unit = null;
+
+  for (const i in map.lines) {
+    const line = map.lines[i];
+    const dist = distToLineSquared(x, y, line);
+    if (dist < closest) {
+      closest = dist;
+      selected_unit = i;
+    }
+  }
+}
+
+function selectVisibilityArea(click_x, click_y) {
+  selected_unit = null;
+  for (const i in map.visible_areas) {
+    const [x, y, w, h] = map.visible_areas[i];
+    if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+      selected_unit = i;
+      break;
+    }
+  }
+}
 
 function drawLine(x1, y1, x2, y2) {
   ctx.moveTo(x1, y1);
@@ -424,7 +499,7 @@ function drawUnit(unit) {
 }
 
 function drawUnits() {
-  if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
+  if (map_action === 'move' && selected_unit !== null && selected_unit < map.units.length) {
     const unit = map.units[selected_unit];
     drawUnit({
       x: unit.x - 0.25,
@@ -452,8 +527,13 @@ function drawLines() {
   for (let line of map.lines) {
     drawLine(...line);
   }
-  if (map_action === 'draw' && (last_x !== 0 || last_y !== 0))
-    drawLine(last_x, last_y, to_canvas_x(mouse_x), to_canvas_y(mouse_y));
+  if (map_action === 'draw' && dragging && mouse_button === 0 && selected_unit === null)
+    drawLine(
+      align_to_grid(to_canvas_x(dragstart_x)),
+      align_to_grid(to_canvas_y(dragstart_y)),
+      to_canvas_x(mouse_x),
+      to_canvas_y(mouse_y)
+    );
   ctx.strokeStyle = 'red';
   ctx.lineWidth = 3;
   ctx.stroke();
@@ -461,11 +541,12 @@ function drawLines() {
 }
 
 function drawVisibility() {
-  const vctx = visibility_canvas.getContext('2d');
-
   vctx.clearRect(0, 0, visibility_canvas.width, visibility_canvas.height);
-  vctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  vctx.fillRect(0, 0, visibility_canvas.width, visibility_canvas.height);
+
+  if (map.visible_areas.length > 0 || map_action === 'visibility') {
+    vctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    vctx.fillRect(0, 0, visibility_canvas.width, visibility_canvas.height);
+  }
 
   vctx.save();
   vctx.translate(map.offset_x, map.offset_y);
@@ -474,14 +555,14 @@ function drawVisibility() {
     vctx.clearRect(...area);
   }
   if (map_action === 'visibility') {
-    if (dragging && selected_unit < 0) {
+    if (dragging && mouse_button === 0 && selected_unit === null) {
       vctx.clearRect(
         align_to_grid(to_canvas_x(dragstart_x)),
         align_to_grid(to_canvas_y(dragstart_y)),
         align_to_grid(to_canvas_x(mouse_x) - to_canvas_x(dragstart_x)),
         align_to_grid(to_canvas_y(mouse_y) - to_canvas_y(dragstart_y))
       );
-    } else if (selected_unit >= 0) {
+    } else if (selected_unit !== null) {
       const [x, y, w, h] = map.visible_areas[selected_unit];
       vctx.fillStyle = 'black';
       vctx.fillCircle(x, y, HANDLE_RADIUS, vctx);
@@ -490,8 +571,13 @@ function drawVisibility() {
       vctx.fillCircle(x + w, y + h, HANDLE_RADIUS, vctx);
     }
   }
+  if (map_action === 'draw' && selected_unit !== null) {
+    const [x1, y1, x2, y2] = map.lines[selected_unit];
+    vctx.fillStyle = 'black';
+    vctx.fillCircle(x1, y1, HANDLE_RADIUS, vctx);
+    vctx.fillCircle(x2, y2, HANDLE_RADIUS, vctx);
+  }
   vctx.restore();
-
   ctx.drawImage(visibility_canvas, 0, 0);
 }
 
@@ -516,46 +602,40 @@ function renderMap() {
   drawUnits();
   ctx.restore();
 
-  if (map.visible_areas.length > 0 || map_action === 'visibility') drawVisibility();
+  drawVisibility();
 }
 
 function canvas_mousedown(event) {
-  if (map_action !== 'move' && map_action !== 'visibility') return;
   dragging = true;
+  mouse_button = event.button || 0;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
   dragstart_x = event.offsetX;
   dragstart_y = event.offsetY;
   last_touches = event.touches;
 
-  if (map_action === 'visibility' && event.type !== 'touchstart') {
-    const click_x = to_canvas_x(dragstart_x);
-    const click_y = to_canvas_y(dragstart_y);
+  const click_x = to_canvas_x(dragstart_x);
+  const click_y = to_canvas_y(dragstart_y);
 
-    if (selected_unit >= 0) {
+  if (map_action === 'draw' && mouse_button === 0) {
+    selectLine(click_x, click_y);
+    if (selected_unit !== null) {
+      const [x1, y1, x2, y2] = map.lines[selected_unit];
+      selectCorner(click_x, click_y, [
+        [x1, y1],
+        [x2, y2],
+      ]);
+    }
+  } else if (map_action === 'visibility' && mouse_button === 0) {
+    selectVisibilityArea(click_x, click_y);
+    if (selected_unit !== null) {
       const [x, y, w, h] = map.visible_areas[selected_unit];
-      const corners = [
+      selectCorner(click_x, click_y, [
         [x, y],
         [x + w, y],
         [x, y + h],
         [x + w, y + h],
-      ];
-      for (const i in corners) {
-        const [cx, cy] = corners[i];
-        if ((cx - click_x) ** 2 + (cy - click_y) ** 2 <= HANDLE_RADIUS ** 2) {
-          selected_corner = i;
-          return;
-        }
-      }
-    }
-
-    selected_unit = -1;
-    for (const i in map.visible_areas) {
-      const [x, y, w, h] = map.visible_areas[i];
-      if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
-        selected_unit = i;
-        break;
-      }
+      ]);
     }
   }
 }
@@ -563,8 +643,19 @@ function canvas_mousedown(event) {
 function canvas_mouseup(event) {
   dragging = false;
 
-  if (map_action === 'visibility' && event.type !== 'touchend') {
-    if (selected_unit < 0) {
+  if (map_action === 'draw' && mouse_button === 0) {
+    if (selected_unit === null) {
+      const x1 = align_to_grid(to_canvas_x(dragstart_x));
+      const y1 = align_to_grid(to_canvas_y(dragstart_y));
+      const x2 = align_to_grid(to_canvas_x(event.offsetX));
+      const y2 = align_to_grid(to_canvas_y(event.offsetY));
+      if (x1 !== x2 || y1 !== y2) {
+        map.lines.push([x1, y1, x2, y2]);
+        send_map();
+      }
+    } else send_map();
+  } else if (map_action === 'visibility' && mouse_button === 0) {
+    if (selected_unit === null) {
       const new_area = [
         align_to_grid(to_canvas_x(dragstart_x)),
         align_to_grid(to_canvas_y(dragstart_y)),
@@ -579,58 +670,16 @@ function canvas_mouseup(event) {
   }
 }
 
-function fix_rect(rect) {
-  if (rect[2] < 0) {
-    rect[0] += rect[2];
-    rect[2] = -rect[2];
-  }
-  if (rect[3] < 0) {
-    rect[1] += rect[3];
-    rect[3] = -rect[3];
-  }
-  return rect;
-}
-
-function to_canvas_x(x) {
-  return (x - map.offset_x) / map.zoom;
-}
-
-function to_canvas_y(y) {
-  return (y - map.offset_y) / map.zoom;
-}
-
 function canvas_click(event) {
   event.preventDefault();
 
-  if (map_action === 'draw') {
-    if (last_x === 0 && last_y === 0) {
-      last_x = align_to_grid(to_canvas_x(event.offsetX));
-      last_y = align_to_grid(to_canvas_y(event.offsetY));
-    } else {
-      map.lines.push([
-        last_x,
-        last_y,
-        align_to_grid(to_canvas_x(event.offsetX)),
-        align_to_grid(to_canvas_y(event.offsetY)),
-      ]);
-      send_map();
-      last_x = last_y = 0;
-    }
-  } else if (map_action === 'units') {
-    map.units.push({
-      x: Math.floor(to_canvas_x(event.offsetX) / map.grid_size),
-      y: Math.floor(to_canvas_y(event.offsetY) / map.grid_size),
-      size: toInt($('#unit-size').value),
-      color: $('#unit-color').value,
-      symbol: $('#unit-symbol').value,
-      hp: toInt($('#unit-hp').value || $('#unit-max-hp').value),
-      max_hp: toInt($('#unit-max-hp').value),
-    });
-    send_map();
-  } else if (map_action === 'move') {
-    const x = Math.floor(to_canvas_x(event.offsetX) / map.grid_size);
-    const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
-    let new_selection = -1;
+  let x = to_canvas_x(event.offsetX);
+  let y = to_canvas_y(event.offsetY);
+
+  if (map_action === 'move') {
+    x = Math.floor(x / map.grid_size);
+    y = Math.floor(y / map.grid_size);
+    let new_selection = null;
     for (const i in map.units) {
       const unit = map.units[i];
       if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
@@ -638,15 +687,15 @@ function canvas_click(event) {
         break;
       }
     }
-    if (new_selection === -1) {
-      if (selected_unit >= 0 && selected_unit < map.units.length) {
+    if (new_selection === null) {
+      if (selected_unit !== null) {
         map.units[selected_unit].x = x;
         map.units[selected_unit].y = y;
         send_map();
+        selected_unit = null;
       }
-      selected_unit = -1;
     } else if (new_selection === selected_unit) {
-      selected_unit = -1;
+      selected_unit = null;
     } else {
       selected_unit = new_selection;
       $('#unit-size').value = map.units[selected_unit].size;
@@ -655,99 +704,63 @@ function canvas_click(event) {
       $('#unit-hp').value = map.units[selected_unit].hp;
       $('#unit-max-hp').value = map.units[selected_unit].max_hp;
     }
-  } else if (map_action === 'visibility') {
-    if (selected_corner < 0) {
-      const click_x = to_canvas_x(event.offsetX);
-      const click_y = to_canvas_y(event.offsetY);
-
-      selected_unit = -1;
-      for (const i in map.visible_areas) {
-        const [x, y, w, h] = map.visible_areas[i];
-        if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
-          selected_unit = i;
-          break;
-        }
-      }
-    } else {
-      const [x, y, w, h] = map.visible_areas[selected_unit];
-      if (w == 0 || h == 0) {
-        map.visible_areas.splice(selected_unit, 1);
-        selected_unit = -1;
-      }
-      selected_corner = -1;
-    }
-    if (selected_unit >= 0) {
-      send_map();
-    }
+  } else if (map_action === 'units') {
+    map.units.push({
+      x: Math.floor(x / map.grid_size),
+      y: Math.floor(y / map.grid_size),
+      size: toInt($('#unit-size').value),
+      color: $('#unit-color').value,
+      symbol: $('#unit-symbol').value,
+      hp: toInt($('#unit-hp').value || $('#unit-max-hp').value),
+      max_hp: toInt($('#unit-max-hp').value),
+    });
+    send_map();
   }
+
   requestAnimationFrame(renderMap);
 }
 
 function canvas_rightclick(event) {
   event.preventDefault();
 
-  if (map_action === 'draw') {
-    if (last_x === 0 && last_y === 0) {
-      last_x = align_to_grid(to_canvas_x(event.offsetX));
-      last_y = align_to_grid(to_canvas_y(event.offsetY));
-    } else {
-      const curr_x = align_to_grid(to_canvas_x(event.offsetX));
-      const curr_y = align_to_grid(to_canvas_y(event.offsetY));
-      for (let i = 0; i < map.lines.length; i++) {
-        const [x1, y1, x2, y2] = map.lines[i];
-        if (
-          (last_x === x1 || last_x === x2) &&
-          (last_y === y1 || last_y === y2) &&
-          (curr_x === x1 || curr_x === x2) &&
-          (curr_y === y1 || curr_y === y2)
-        ) {
-          map.lines.splice(i, 1);
-          i--;
-        }
-      }
-      send_map();
-      last_x = last_y = 0;
-    }
-  } else if (map_action === 'move') {
-    const x = Math.floor(to_canvas_x(event.offsetX) / map.grid_size);
-    const y = Math.floor(to_canvas_y(event.offsetY) / map.grid_size);
+  const x = to_canvas_x(event.offsetX);
+  const y = to_canvas_y(event.offsetY);
+
+  if (map_action === 'move') {
+    x = Math.floor(x / map.grid_size);
+    y = Math.floor(y / map.grid_size);
     for (const i in map.units) {
       const unit = map.units[i];
       if (unit.x <= x && x < unit.x + unit.size && unit.y <= y && y < unit.y + unit.size) {
         map.units.splice(i, 1);
-        selected_unit = -1;
+        selected_unit = null;
         send_map();
         break;
       }
     }
-  } else if (map_action === 'visibility') {
-    const click_x = to_canvas_x(event.offsetX);
-    const click_y = to_canvas_y(event.offsetY);
-    if (selected_unit >= 0) {
-      const [x, y, w, h] = map.visible_areas[selected_unit];
-      if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
-        map.visible_areas.splice(selected_unit, 1);
-        send_map();
-      }
-    } else {
-      for (const i in map.visible_areas) {
-        const [x, y, w, h] = map.visible_areas[i];
-        if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
-          map.visible_areas.splice(i, 1);
-          send_map();
-          break;
-        }
-      }
+  } else if (map_action === 'draw') {
+    selectLine(x, y);
+    if (selected_unit !== null) {
+      map.lines.splice(selected_unit, 1);
+      selected_unit = null;
+      send_map();
     }
-    selected_unit = -1;
+  } else if (map_action === 'visibility') {
+    selectVisibilityArea(x, y);
+    if (selected_unit !== null) {
+      map.visible_areas.splice(selected_unit, 1);
+      selected_unit = null;
+      send_map();
+    }
   }
+
   requestAnimationFrame(renderMap);
 }
 
 function canvas_keyup(event) {
   event.preventDefault();
   if (map_action === 'draw' && event.key === 'Escape') {
-    last_x = last_y = 0;
+    dragging = false;
   } else if (event.key === 'r') {
     map.offset_x = 0;
     map.offset_y = 0;
@@ -760,86 +773,128 @@ function canvas_mousemove(event) {
   mouse_x = event.offsetX;
   mouse_y = event.offsetY;
 
-  if (map_action === 'move' && dragging) {
-    event.preventDefault();
+  if (dragging) {
+    if (map_action === 'move' || mouse_button === 1) {
+      event.preventDefault();
 
-    let new_x = last_x,
-      new_y = last_y;
+      let new_x, new_y;
 
-    if (event.type === 'touchmove') {
-      if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
-        const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
-        const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
-        const last_diff = Math.sqrt(last_diff_x * last_diff_x + last_diff_y * last_diff_y);
-        last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
-        last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
+      if (event.type === 'touchmove') {
+        if (last_touches && last_touches.length === 2 && event.touches.length === 2) {
+          const last_diff_x = last_touches[0].pageX - last_touches[1].pageX;
+          const last_diff_y = last_touches[0].pageY - last_touches[1].pageY;
+          const last_diff = Math.sqrt(last_diff_x * last_diff_x + last_diff_y * last_diff_y);
+          last_x = (last_touches[0].pageX + last_touches[1].pageX) / 2;
+          last_y = (last_touches[0].pageY + last_touches[1].pageY) / 2;
 
-        const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
-        const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
-        const curr_diff = Math.sqrt(curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y);
-        new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-        new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+          const curr_diff_x = event.touches[0].pageX - event.touches[1].pageX;
+          const curr_diff_y = event.touches[0].pageY - event.touches[1].pageY;
+          const curr_diff = Math.sqrt(curr_diff_x * curr_diff_x + curr_diff_y * curr_diff_y);
+          new_x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+          new_y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
 
-        const zoom_change = Math.pow(curr_diff / last_diff, 2);
-        map.zoom *= zoom_change;
+          const zoom_change = Math.pow(curr_diff / last_diff, 2);
+          map.zoom *= zoom_change;
 
-        map.offset_x -=
-          ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
-        map.offset_y -=
-          ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
+          map.offset_x -=
+            ((new_x - canvas.offsetLeft - map.offset_x) * (zoom_change - 1)) / zoom_change;
+          map.offset_y -=
+            ((new_y - canvas.offsetTop - map.offset_y) * (zoom_change - 1)) / zoom_change;
+        } else {
+          new_x = event.touches[0].pageX;
+          new_y = event.touches[0].pageY;
+        }
+        last_touches = event.touches;
       } else {
-        new_x = event.touches[0].pageX;
-        new_y = event.touches[0].pageY;
+        new_x = event.pageX;
+        new_y = event.pageY;
       }
-      last_touches = event.touches;
-    } else {
-      new_x = event.pageX;
-      new_y = event.pageY;
+      map.offset_x += new_x - last_x;
+      map.offset_y += new_y - last_y;
+      last_x = new_x;
+      last_y = new_y;
+    } else if (map_action === 'draw' && selected_unit !== null) {
+      let [x1, y1, x2, y2] = map.lines[selected_unit];
+      const new_x = align_to_grid(to_canvas_x(mouse_x));
+      const new_y = align_to_grid(to_canvas_y(mouse_y));
+      switch (selected_corner) {
+        case '0':
+          x1 = new_x;
+          y1 = new_y;
+          break;
+        case '1':
+          x2 = new_x;
+          y2 = new_y;
+          break;
+        default:
+          x1 += new_x - align_to_grid(to_canvas_x(dragstart_x));
+          y1 += new_y - align_to_grid(to_canvas_y(dragstart_y));
+          x2 += new_x - align_to_grid(to_canvas_x(dragstart_x));
+          y2 += new_y - align_to_grid(to_canvas_y(dragstart_y));
+          dragstart_x = mouse_x;
+          dragstart_y = mouse_y;
+      }
+      if (x1 === x2 && y1 === y2) {
+        map.lines.splice(selected_unit, 1);
+        send_map();
+        selected_unit = null;
+      } else {
+        map.lines[selected_unit] = [x1, y1, x2, y2];
+      }
+    } else if (map_action === 'visibility' && selected_unit !== null) {
+      let [x, y, w, h] = map.visible_areas[selected_unit];
+      const new_x = align_to_grid(to_canvas_x(mouse_x));
+      const new_y = align_to_grid(to_canvas_y(mouse_y));
+      switch (selected_corner) {
+        case '0':
+          w += x - new_x;
+          h += y - new_y;
+          x = new_x;
+          y = new_y;
+          break;
+        case '1':
+          w = new_x - x;
+          h += y - new_y;
+          y = new_y;
+          break;
+        case '2':
+          w += x - new_x;
+          h = new_y - y;
+          x = new_x;
+          break;
+        case '3':
+          w = new_x - x;
+          h = new_y - y;
+          break;
+        default:
+          x += new_x - align_to_grid(to_canvas_x(dragstart_x));
+          y += new_y - align_to_grid(to_canvas_y(dragstart_y));
+          dragstart_x = mouse_x;
+          dragstart_y = mouse_y;
+      }
+      if (w === 0 || h === 0) {
+        map.visible_areas.splice(selected_unit, 1);
+        send_map();
+        selected_unit = null;
+      } else {
+        map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
+      }
     }
-    map.offset_x += new_x - last_x;
-    map.offset_y += new_y - last_y;
-    last_x = new_x;
-    last_y = new_y;
-  } else if (
-    map_action === 'visibility' &&
-    event.type !== 'touchmove' &&
-    dragging &&
-    selected_unit >= 0
-  ) {
-    let [x, y, w, h] = map.visible_areas[selected_unit];
-    const new_x = align_to_grid(to_canvas_x(mouse_x));
-    const new_y = align_to_grid(to_canvas_y(mouse_y));
-
-    switch (selected_corner) {
-      case '0':
-        w += x - new_x;
-        h += y - new_y;
-        x = new_x;
-        y = new_y;
-        break;
-      case '1':
-        w = new_x - x;
-        h += y - new_y;
-        y = new_y;
-        break;
-      case '2':
-        w += x - new_x;
-        h = new_y - y;
-        x = new_x;
-        break;
-      case '3':
-        w = new_x - x;
-        h = new_y - y;
-        break;
-      default:
-        x += new_x - align_to_grid(to_canvas_x(dragstart_x));
-        y += new_y - align_to_grid(to_canvas_y(dragstart_y));
-        dragstart_x = mouse_x;
-        dragstart_y = mouse_y;
-    }
-    map.visible_areas[selected_unit] = fix_rect([x, y, w, h]);
   }
 
+  requestAnimationFrame(renderMap);
+}
+
+function canvas_wheel(event) {
+  let zoom_change = 1;
+  if (event.deltaY < 0) {
+    zoom_change = 1.25;
+  } else if (event.deltaY > 0) {
+    zoom_change = 0.8;
+  }
+  map.zoom *= zoom_change;
+  map.offset_x -= (event.offsetX - map.offset_x) * (zoom_change - 1);
+  map.offset_y -= (event.offsetY - map.offset_y) * (zoom_change - 1);
   requestAnimationFrame(renderMap);
 }
 
@@ -895,6 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
   visibility_canvas = document.createElement('canvas');
   visibility_canvas.width = width;
   visibility_canvas.height = height;
+  vctx = visibility_canvas.getContext('2d');
 
   canvas.addEventListener('mousedown', canvas_mousedown);
   canvas.addEventListener('touchstart', canvas_mousedown);
@@ -904,6 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
   canvas.addEventListener('touchmove', canvas_mousemove);
   canvas.addEventListener('contextmenu', canvas_rightclick);
   canvas.addEventListener('click', canvas_click);
+  canvas.addEventListener('wheel', canvas_wheel);
   window.addEventListener('keyup', canvas_keyup);
 
   $('#map-bg').addEventListener('change', e => {
@@ -940,22 +997,22 @@ document.addEventListener('DOMContentLoaded', function() {
       $$('.map-actions .toggle').forEach(e => e.classList.remove('active'));
 
       let target = e.target;
-      while (target.tagName !== "BUTTON") target = target.parentElement;
+      while (target.tagName !== 'BUTTON') target = target.parentElement;
 
       target.classList.add('active');
       canvas.classList.remove(map_action);
       map_action = target.dataset['action'];
       canvas.classList.add(map_action);
 
-      last_x = last_y = 0;
-      selected_unit = -1;
+      selected_unit = null;
+      selected_corner = null;
 
       requestAnimationFrame(renderMap);
     })
   );
   for (const attr of ['size', 'color', 'symbol', 'hp', 'max-hp']) {
     $('#unit-' + attr).addEventListener('change', e => {
-      if (map_action === 'move' && selected_unit >= 0 && selected_unit < map.units.length) {
+      if (map_action === 'move' && selected_unit !== null) {
         if (attr === 'color' || attr === 'symbol')
           map.units[selected_unit][attr.replace('-', '_')] = e.target.value;
         else map.units[selected_unit][attr.replace('-', '_')] = toInt(e.target.value);
@@ -964,6 +1021,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  $('#unit-hp').addEventListener('change', e => {
+    const val = toInt(e.target.value);
+    const unit_max_hp = $('#unit-max-hp');
+    if (val > toInt(unit_max_hp.value)) unit_max_hp.value = val;
+  });
+  $('#unit-max-hp').addEventListener('change', e => {
+    const val = toInt(e.target.value);
+    const unit_hp = $('#unit-hp');
+    if (val < toInt(unit_hp.value)) unit_hp.value = val;
+  });
   $('button.btn-more').addEventListener('click', e => {
     const mapMoreEl = $('#map-more');
     if (mapMoreEl.classList.contains('collapsed')) {
