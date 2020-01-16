@@ -929,6 +929,12 @@ function newMap() {
   send('new-map');
 }
 
+function clearLines() {
+  map.lines = [];
+  send_map();
+  requestAnimationFrame(renderMap);
+}
+
 /////////////////////
 /////////////////////
 // Event Listeners //

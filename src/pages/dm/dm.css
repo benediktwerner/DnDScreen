@@ -157,7 +157,7 @@ canvas.units{
 
 #map-more {
   overflow: hidden;
-  max-height: 250px;
+  max-height: 300px;
   transition: max-height 500ms ease-in-out;
 }
 #map-more.collapsed {

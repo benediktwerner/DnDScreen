@@ -116,9 +116,10 @@
             <input id="grid-y" type="number" value="0" />
             <input id="grid-size" type="number" value="20" />
           </div>
-          <button onclick="showLoadMapDialog()">Laden</button>
-          <button onclick="showDialog('save-map')">Speichern</button>
-          <button onclick="confirm(() => newMap())">Neu</button>
+          <button type="button" onclick="clearLines()">Alle Linien loeschen</button>
+          <button type="button" onclick="showLoadMapDialog()">Laden</button>
+          <button type="button" onclick="showDialog('save-map')">Speichern</button>
+          <button type="button" onclick="confirm(() => newMap())">Neu</button>
         </div>
 
         <div class="messages">
