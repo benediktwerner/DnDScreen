@@ -73,11 +73,13 @@ canvas#effects {
 }
 
 .stats-table th,
-.stats-table td:nth-child(odd) {
+.stats-table td:nth-child(odd),
+.stats-table td:last-child {
   padding-left: 10px;
 }
 .stats-table th,
-.stats-table td:nth-child(even) {
+.stats-table td:nth-child(even),
+.stats-table td:last-child {
   padding-right: 10px;
 }
 

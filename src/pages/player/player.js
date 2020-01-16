@@ -802,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
       } else {
         const el = document.documentElement;
-        if (el.requestFullscreen) e.requestFullscreen();
+        if (el.requestFullscreen) el.requestFullscreen();
         else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
         else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
       }

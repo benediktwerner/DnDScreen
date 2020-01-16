@@ -116,6 +116,7 @@ class Player:
         self.hp_total = json.get("hp_total", self.hp)
         self.hitdice = json.get("hitdice", 0)
         self.hitdice_total = json.get("hitdice_total", self.hitdice)
+        self.passive_perception = json.get("passive_perception", 0)
         self.copper = json.get("copper", 0)
         self.silver = json.get("silver", 0)
         self.gold = json.get("gold", 0)
@@ -152,6 +153,7 @@ class Player:
             "hp_total": self.hp_total,
             "hitdice": self.hitdice,
             "hitdice_total": self.hitdice_total,
+            "passive_perception": self.passive_perception,
             "copper": self.copper,
             "silver": self.silver,
             "gold": self.gold,

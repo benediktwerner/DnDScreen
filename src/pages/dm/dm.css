@@ -59,10 +59,10 @@ body {
 
 .player-table th:nth-child(1),
 .player-table th:nth-child(2),
-.player-table th:nth-child(3),
+.player-table th:nth-child(4),
 .player-table td:nth-child(1),
 .player-table td:nth-child(3),
-.player-table td:nth-child(5) {
+.player-table td:nth-child(6) {
   padding-left: 7px;
 }
 .player-table th:nth-child(1),
