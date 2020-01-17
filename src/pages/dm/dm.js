@@ -207,7 +207,7 @@ function updatePlayer() {
     'hp_total',
     'hitdice',
     'hitdice_total',
-    "passive_perception",
+    'passive_perception',
     'copper',
     'silver',
     'gold',
@@ -263,7 +263,7 @@ function showPlayerDialog(e) {
     'hp_total',
     'hitdice',
     'hitdice_total',
-    "passive_perception",
+    'passive_perception',
     'copper',
     'silver',
     'gold',
@@ -805,7 +805,6 @@ function canvas_mousemove(event) {
 
   if (dragging) {
     if (map_action === 'move' || mouse_button === 1) {
-
       let new_x, new_y;
 
       if (event.type === 'touchmove') {
