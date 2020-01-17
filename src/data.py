@@ -236,7 +236,11 @@ class Initiative:
         self.activeIndex = json.get("activeIndex", 0)
 
     def next(self):
+        if not self.units:
+            return False
+
         self.activeIndex = (self.activeIndex + 1) % len(self.units)
+        return True
 
     def update(self, data):
         self.activeIndex = 0

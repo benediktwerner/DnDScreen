@@ -83,8 +83,8 @@ async def _handle_new_map(ws):
 
 
 async def _handle_next_initiative(ws):
-    data.initiative.next()
-    await send_all({"type": "initiative-index", "data": data.initiative.activeIndex})
+    if data.initiative.next():
+        await send_all({"type": "initiative-index", "data": data.initiative.activeIndex})
 
 
 async def _handle_add_player(ws, **player):
