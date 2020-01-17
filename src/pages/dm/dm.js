@@ -417,6 +417,17 @@ function distToLineSquared(x, y, line) {
 function distToLine(x, y, line) {
   return Math.sqrt(distToLineSquared(x, y, line));
 }
+function insideRect(x, y, rect) {
+  const [rx, ry, rw, rh] = rect;
+  return rx <= x && x <= rx + rw && ry <= y && y <= ry + rh;
+}
+function rectContained(rect, rects) {
+  const [ax, ay, aw, ah] = rect;
+  for (const [bx, by, bw, bh] of rects) {
+    if (bx <= ax && ax + aw <= bx + bw && by <= ay && ay + ah <= by + bh) return true;
+  }
+  return false;
+}
 
 function selectCorner(x, y, corners) {
   selected_corner = null;
@@ -444,11 +455,11 @@ function selectLine(x, y) {
   }
 }
 
-function selectVisibilityArea(click_x, click_y) {
+function selectVisibilityArea(x, y) {
   selected_unit = null;
+
   for (const i in map.visible_areas) {
-    const [x, y, w, h] = map.visible_areas[i];
-    if (x < click_x && click_x < x + w && y < click_y && click_y < y + h) {
+    if (insideRect(x, y, map.visible_areas[i])) {
       selected_unit = i;
       break;
     }
@@ -609,12 +620,23 @@ function renderMap() {
 }
 
 function canvas_mousedown(event) {
-  dragging = true;
   mouse_button = event.button || 0;
+
+  if (dragging) {
+    if (mouse_button === 2) {
+      dragging = false;
+    }
+    return;
+  }
+
+  dragging = true;
   last_x = event.pageX || event.touches[0].pageX;
   last_y = event.pageY || event.touches[0].pageY;
-  dragstart_x = event.offsetX || event.touches[0].pageX - canvas.offsetLeft;
-  dragstart_y = event.offsetY || event.touches[0].pageY - canvas.offsetTop;
+  mouse_x =
+    event.offsetX !== undefined ? event.offsetX : event.touches[0].pageX - canvas.offsetLeft;
+  mouse_y = event.offsetY !== undefined ? event.offsetY : event.touches[0].pageY - canvas.offsetTop;
+  dragstart_x = mouse_x;
+  dragstart_y = mouse_y;
   last_touches = event.touches;
 
   const click_x = to_canvas_x(dragstart_x);
@@ -622,36 +644,46 @@ function canvas_mousedown(event) {
 
   if (map_action === 'draw' && mouse_button === 0) {
     if (selected_unit !== null) {
-      const [x1, y1, x2, y2] = map.lines[selected_unit];
+      const line = map.lines[selected_unit];
+      const [x1, y1, x2, y2] = line;
       selectCorner(click_x, click_y, [
         [x1, y1],
         [x2, y2],
       ]);
-    }
-    if (selected_unit === null || selected_corner === null) {
-      selectLine(click_x, click_y);
+      if (
+        selected_corner === null &&
+        distToLineSquared(click_x, click_y, line) > HANDLE_RADIUS_SQR
+      ) {
+        selected_unit = null;
+      }
     }
   } else if (map_action === 'visibility' && mouse_button === 0) {
     if (selected_unit !== null) {
-      const [x, y, w, h] = map.visible_areas[selected_unit];
+      const rect = map.visible_areas[selected_unit];
+      const [x, y, w, h] = rect;
       selectCorner(click_x, click_y, [
         [x, y],
         [x + w, y],
         [x, y + h],
         [x + w, y + h],
       ]);
-    }
-    if (selected_unit === null || selected_corner === null) {
-      selectVisibilityArea(click_x, click_y);
+      if (selected_corner === null && !insideRect(click_x, click_y, rect)) {
+        selected_unit = null;
+      }
     }
   }
 }
 
 function canvas_mouseup(event) {
+  if (!dragging) return;
+
   dragging = false;
 
-  const x = to_canvas_x(event.offsetX || event.changedTouches[0].pageX - canvas.offsetLeft);
-  const y = to_canvas_y(event.offsetY || event.changedTouches[0].pageY - canvas.offsetTop);
+  mouse_x =
+    event.offsetX !== undefined ? event.offsetX : event.touches[0].pageX - canvas.offsetLeft;
+  mouse_y = event.offsetY !== undefined ? event.offsetY : event.touches[0].pageY - canvas.offsetTop;
+  const x = to_canvas_x(mouse_x);
+  const y = to_canvas_y(mouse_y);
 
   if (map_action === 'draw' && mouse_button === 0) {
     if (selected_unit === null) {
@@ -662,14 +694,14 @@ function canvas_mouseup(event) {
       if (x1 !== x2 || y1 !== y2) {
         map.lines.push([x1, y1, x2, y2]);
         send_map();
-      }
+      } else selectLine(x, y);
     } else {
       const [x1, y1, x2, y2] = map.lines[selected_unit];
       if (x1 === x2 && y1 === y2) {
         map.lines.splice(selected_unit, 1);
         selected_unit = null;
+        send_map();
       }
-      send_map();
     }
   } else if (map_action === 'visibility' && mouse_button === 0) {
     if (selected_unit === null) {
@@ -679,29 +711,27 @@ function canvas_mouseup(event) {
         align_to_grid(x - to_canvas_x(dragstart_x)),
         align_to_grid(y - to_canvas_y(dragstart_y)),
       ];
-      if (new_area[2] != 0 && new_area[3] != 0) {
+      if (new_area[2] != 0 && new_area[3] != 0 && !rectContained(new_area, map.visible_areas)) {
         map.visible_areas.push(fix_rect(new_area));
         send_map();
-      }
+      } else selectVisibilityArea(x, y);
     } else {
       const [x, y, w, h] = map.visible_areas[selected_unit];
       if (w == 0 || h == 0) {
         map.visible_areas.splice(selected_unit, 1);
         selected_unit = null;
+        send_map();
       }
-      send_map();
     }
   }
+
+  if (mouse_button === 0) canvas_click(x, y);
+  else if (mouse_button === 2) canvas_rightclick(x, y);
 
   requestAnimationFrame(renderMap);
 }
 
-function canvas_click(event) {
-  event.preventDefault();
-
-  let x = to_canvas_x(event.offsetX);
-  let y = to_canvas_y(event.offsetY);
-
+function canvas_click(x, y) {
   if (map_action === 'move') {
     x = Math.floor(x / map.grid_size);
     y = Math.floor(y / map.grid_size);
@@ -742,16 +772,9 @@ function canvas_click(event) {
     });
     send_map();
   }
-
-  requestAnimationFrame(renderMap);
 }
 
-function canvas_rightclick(event) {
-  event.preventDefault();
-
-  let x = to_canvas_x(event.offsetX);
-  let y = to_canvas_y(event.offsetY);
-
+function canvas_rightclick(x, y) {
   if (map_action === 'move') {
     x = Math.floor(x / map.grid_size);
     y = Math.floor(y / map.grid_size);
@@ -765,22 +788,27 @@ function canvas_rightclick(event) {
       }
     }
   } else if (map_action === 'draw') {
-    selectLine(x, y);
+    if (
+      selected_unit === null ||
+      distToLineSquared(x, y, map.lines[selected_unit]) > HANDLE_RADIUS_SQR
+    ) {
+      selectLine(x, y);
+    }
     if (selected_unit !== null) {
       map.lines.splice(selected_unit, 1);
       selected_unit = null;
       send_map();
     }
   } else if (map_action === 'visibility') {
-    selectVisibilityArea(x, y);
+    if (selected_unit === null || !insideRect(x, y, map.visible_areas[selected_unit])) {
+      selectVisibilityArea(x, y);
+    }
     if (selected_unit !== null) {
       map.visible_areas.splice(selected_unit, 1);
       selected_unit = null;
       send_map();
     }
   }
-
-  requestAnimationFrame(renderMap);
 }
 
 function canvas_keyup(event) {
@@ -800,8 +828,9 @@ function canvas_keyup(event) {
 function canvas_mousemove(event) {
   event.preventDefault();
 
-  mouse_x = event.offsetX || event.touches[0].pageX - canvas.offsetLeft;
-  mouse_y = event.offsetY || event.touches[0].pageY - canvas.offsetTop;
+  mouse_x =
+    event.offsetX !== undefined ? event.offsetX : event.touches[0].pageX - canvas.offsetLeft;
+  mouse_y = event.offsetY !== undefined ? event.offsetY : event.touches[0].pageY - canvas.offsetTop;
 
   if (dragging) {
     if (map_action === 'move' || mouse_button === 1) {
@@ -947,12 +976,16 @@ function newMap() {
 
 function clearLines() {
   map.lines = [];
+  selected_unit = null;
+  selected_corner = null;
   send_map();
   requestAnimationFrame(renderMap);
 }
 
 function clearVisibility() {
   map.visible_areas = [];
+  selected_unit = null;
+  selected_corner = null;
   send_map();
   requestAnimationFrame(renderMap);
 }
@@ -986,8 +1019,7 @@ document.addEventListener('DOMContentLoaded', function() {
   canvas.addEventListener('touchend', canvas_mouseup);
   canvas.addEventListener('mousemove', canvas_mousemove);
   canvas.addEventListener('touchmove', canvas_mousemove);
-  canvas.addEventListener('contextmenu', canvas_rightclick);
-  canvas.addEventListener('click', canvas_click);
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
   canvas.addEventListener('wheel', canvas_wheel);
   window.addEventListener('keyup', canvas_keyup);
 
