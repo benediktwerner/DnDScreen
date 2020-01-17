@@ -538,6 +538,7 @@ function drawLines() {
     );
   ctx.strokeStyle = 'red';
   ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
   ctx.stroke();
   ctx.lineWidth = 1;
 }

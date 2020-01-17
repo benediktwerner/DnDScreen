@@ -543,6 +543,7 @@ function drawLines() {
     drawLine(...line);
   }
   mapCtx.lineWidth = 2;
+  mapCtx.lineCap = 'round';
   mapCtx.stroke();
   mapCtx.lineWidth = 1;
 }
