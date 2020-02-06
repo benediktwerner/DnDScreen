@@ -90,6 +90,8 @@ function reconnect() {
     } else if (type === 'initiative-index') {
       $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
       $(`.initiative-bar .initiative-cell:nth-child(${data + 1})`).classList.add('active');
+    } else if (type === 'show-image') {
+      showImage(data);
     } else {
       alert(`Invalid message type: ${type}\n${JSON.stringify(data)}`);
     }
@@ -439,6 +441,7 @@ function showMoneyParticles(money) {
 let dialog_backdrop;
 let onDialogClose = null;
 let isAnimatingDialog = false;
+let imgViewer;
 
 function showDialog(name) {
   $$('.dialog').forEach(dialog => {
@@ -486,6 +489,16 @@ function showRewardMoneyDialog(money) {
     }
   }
   onDialogClose = () => showMoneyParticles(money);
+}
+
+function showImage(url) {
+  imgViewer.classList.remove('hidden');
+  while (imgViewer.children.length > 0) {
+    imgViewer.removeChild(imgViewer.firstChild);
+  }
+  const imgEle = document.createElement('img');
+  imgEle.src = url;
+  imgViewer.appendChild(imgEle);
 }
 
 /////////
@@ -758,6 +771,11 @@ document.addEventListener('DOMContentLoaded', function() {
   dialog_backdrop = $('.dialog-backdrop');
   dialog_backdrop.addEventListener('click', function(e) {
     if (e.target === dialog_backdrop) closeDialog();
+  });
+
+  imgViewer = $('.image-viewer');
+  imgViewer.addEventListener('click', function(e) {
+    imgViewer.classList.add('hidden');
   });
 
   effectsCanvas = $('#effects');

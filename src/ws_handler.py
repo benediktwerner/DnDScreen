@@ -84,7 +84,9 @@ async def _handle_new_map(ws):
 
 async def _handle_next_initiative(ws):
     if data.initiative.next():
-        await send_all({"type": "initiative-index", "data": data.initiative.activeIndex})
+        await send_all(
+            {"type": "initiative-index", "data": data.initiative.activeIndex}
+        )
 
 
 async def _handle_add_player(ws, **player):
@@ -125,6 +127,10 @@ async def _handle_update_initiative(ws, initiative):
     await send_all(data)
 
 
+async def _handle_show_image(ws, url):
+    await send_players({"type": "show-image", "data": url})
+
+
 DM_HANDLERS = {
     "init": _handle_init,
     "save": _handle_save,
@@ -138,6 +144,7 @@ DM_HANDLERS = {
     "load-map": _handle_load_map,
     "save-map": _handle_save_map,
     "update-initiative": _handle_update_initiative,
+    "show-image": _handle_show_image,
 }
 
 

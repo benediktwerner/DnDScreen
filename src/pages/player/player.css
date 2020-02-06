@@ -281,3 +281,25 @@ button.btn-bottom-left {
   bottom: 0;
   left: 115px;
 }
+
+.image-viewer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.image-viewer.hidden {
+  display: none;
+}
+
+.image-viewer img {
+  transform: rotate(-90deg);
+  min-width: 70vh;
+  max-width: 85vh;
+}

@@ -990,6 +990,11 @@ function clearVisibility() {
   requestAnimationFrame(renderMap);
 }
 
+function showImage() {
+  const url = prompt('URL:');
+  if (url) send('show-image', { url });
+}
+
 /////////////////////
 /////////////////////
 // Event Listeners //
