@@ -350,8 +350,7 @@ function confirm(action) {
 /////////
 
 const TWO_PI = Math.PI * 2;
-const HANDLE_RADIUS = 10;
-const HANDLE_RADIUS_SQR = HANDLE_RADIUS ** 2;
+const HANDLE_RADIUS = 20;
 
 let canvas;
 let ctx, vctx;
@@ -380,6 +379,10 @@ let map = {
   units: [],
   visible_areas: [],
 };
+
+function handle_radius() {
+  return HANDLE_RADIUS / map.zoom;
+}
 
 function fix_rect(rect) {
   if (rect[2] < 0) {
@@ -434,7 +437,7 @@ function selectCorner(x, y, corners) {
 
   for (const i in corners) {
     const [cx, cy] = corners[i];
-    if ((cx - x) ** 2 + (cy - y) ** 2 <= HANDLE_RADIUS_SQR) {
+    if ((cx - x) ** 2 + (cy - y) ** 2 <= handle_radius() ** 2) {
       selected_corner = i;
       return;
     }
@@ -442,7 +445,7 @@ function selectCorner(x, y, corners) {
 }
 
 function selectLine(x, y) {
-  let closest = HANDLE_RADIUS_SQR;
+  let closest = handle_radius() ** 2;
   selected_unit = null;
 
   for (const i in map.lines) {
@@ -579,17 +582,17 @@ function drawVisibility() {
     } else if (selected_unit !== null) {
       const [x, y, w, h] = map.visible_areas[selected_unit];
       vctx.fillStyle = 'black';
-      vctx.fillCircle(x, y, HANDLE_RADIUS, vctx);
-      vctx.fillCircle(x + w, y, HANDLE_RADIUS, vctx);
-      vctx.fillCircle(x, y + h, HANDLE_RADIUS, vctx);
-      vctx.fillCircle(x + w, y + h, HANDLE_RADIUS, vctx);
+      vctx.fillCircle(x, y, handle_radius(), vctx);
+      vctx.fillCircle(x + w, y, handle_radius(), vctx);
+      vctx.fillCircle(x, y + h, handle_radius(), vctx);
+      vctx.fillCircle(x + w, y + h, handle_radius(), vctx);
     }
   }
   if (map_action === 'draw' && selected_unit !== null) {
     const [x1, y1, x2, y2] = map.lines[selected_unit];
     vctx.fillStyle = 'black';
-    vctx.fillCircle(x1, y1, HANDLE_RADIUS, vctx);
-    vctx.fillCircle(x2, y2, HANDLE_RADIUS, vctx);
+    vctx.fillCircle(x1, y1, handle_radius(), vctx);
+    vctx.fillCircle(x2, y2, handle_radius(), vctx);
   }
   vctx.restore();
   ctx.drawImage(visibility_canvas, 0, 0);
@@ -652,7 +655,7 @@ function canvas_mousedown(event) {
       ]);
       if (
         selected_corner === null &&
-        distToLineSquared(click_x, click_y, line) > HANDLE_RADIUS_SQR
+        distToLineSquared(click_x, click_y, line) > handle_radius() ** 2
       ) {
         selected_unit = null;
       }
@@ -680,8 +683,9 @@ function canvas_mouseup(event) {
   dragging = false;
 
   mouse_x =
-    event.offsetX !== undefined ? event.offsetX : event.touches[0].pageX - canvas.offsetLeft;
-  mouse_y = event.offsetY !== undefined ? event.offsetY : event.touches[0].pageY - canvas.offsetTop;
+    event.offsetX !== undefined ? event.offsetX : event.changedTouches[0].pageX - canvas.offsetLeft;
+  mouse_y =
+    event.offsetY !== undefined ? event.offsetY : event.changedTouches[0].pageY - canvas.offsetTop;
   const x = to_canvas_x(mouse_x);
   const y = to_canvas_y(mouse_y);
 
@@ -720,8 +724,8 @@ function canvas_mouseup(event) {
       if (w == 0 || h == 0) {
         map.visible_areas.splice(selected_unit, 1);
         selected_unit = null;
-        send_map();
       }
+      send_map();
     }
   }
 
@@ -790,7 +794,7 @@ function canvas_rightclick(x, y) {
   } else if (map_action === 'draw') {
     if (
       selected_unit === null ||
-      distToLineSquared(x, y, map.lines[selected_unit]) > HANDLE_RADIUS_SQR
+      distToLineSquared(x, y, map.lines[selected_unit]) > handle_radius() ** 2
     ) {
       selectLine(x, y);
     }
