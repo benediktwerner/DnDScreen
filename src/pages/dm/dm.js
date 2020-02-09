@@ -1087,24 +1087,37 @@ document.addEventListener('DOMContentLoaded', function() {
   for (const attr of ['size', 'color', 'symbol', 'hp', 'max-hp']) {
     $('#unit-' + attr).addEventListener('change', e => {
       if (map_action === 'move' && selected_unit !== null) {
-        if (attr === 'color' || attr === 'symbol')
-          map.units[selected_unit][attr.replace('-', '_')] = e.target.value;
-        else map.units[selected_unit][attr.replace('-', '_')] = toInt(e.target.value);
+        const unit = map.units[selected_unit];
+        switch (attr) {
+          case 'size':
+            unit.size = toInt(e.target.value);
+            break;
+          case 'color':
+            unit.color = e.target.value;
+            break;
+          case 'symbol':
+            unit.symbol = e.target.value;
+            break;
+          case 'hp':
+            unit.hp = toInt(e.target.value);
+            if (unit.hp > unit.max_hp) {
+              unit.max_hp = unit.hp;
+              $('#unit-max-hp').value = unit.max_hp;
+            }
+            break;
+          case 'max-hp':
+            unit.max_hp = toInt(e.target.value);
+            if (unit.hp > unit.max_hp) {
+              unit.hp = unit.max_hp;
+              $('#unit-hp').value = unit.hp;
+            }
+            break;
+        }
         send_map();
         requestAnimationFrame(renderMap);
       }
     });
   }
-  $('#unit-hp').addEventListener('change', e => {
-    const val = toInt(e.target.value);
-    const unit_max_hp = $('#unit-max-hp');
-    if (val > toInt(unit_max_hp.value)) unit_max_hp.value = val;
-  });
-  $('#unit-max-hp').addEventListener('change', e => {
-    const val = toInt(e.target.value);
-    const unit_hp = $('#unit-hp');
-    if (val < toInt(unit_hp.value)) unit_hp.value = val;
-  });
   $('button.btn-more').addEventListener('click', e => {
     const mapMoreEl = $('#map-more');
     if (mapMoreEl.classList.contains('collapsed')) {
