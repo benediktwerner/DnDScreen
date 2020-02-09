@@ -508,8 +508,11 @@ function drawUnit(unit) {
     ctx.fillText(unit.symbol, x, y + 0.37 * font_size);
   }
   if (unit.max_hp > 0) {
-    ctx.fillStyle = '#051e3e';
-    ctx.font = '10px sans-serif';
+    ctx.fillStyle = 'red';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 5;
+    ctx.font = '20px sans-serif';
+    ctx.strokeText(unit.hp + '/' + unit.max_hp, x, y - r - 5);
     ctx.fillText(unit.hp + '/' + unit.max_hp, x, y - r - 5);
   }
 }
