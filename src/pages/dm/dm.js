@@ -623,6 +623,7 @@ function renderMap() {
 }
 
 function canvas_mousedown(event) {
+  event.preventDefault();
   mouse_button = event.button || 0;
 
   if (dragging) {
@@ -678,6 +679,7 @@ function canvas_mousedown(event) {
 }
 
 function canvas_mouseup(event) {
+  event.preventDefault();
   if (!dragging) return;
 
   dragging = false;
