@@ -8,7 +8,7 @@ Element.prototype.$ = function(cls) {
 };
 
 function toInt(val) {
-  const result = parseInt(val);
+  const result = parseInt(val.replace(".", ""));
   if (isNaN(result)) return 0;
   return result;
 }
@@ -56,9 +56,7 @@ function reconnect() {
           pEl.classList.remove('hidden');
           for (const key in p) {
             if (key === 'cls') continue;
-            for (const el of pEl.getElementsByClassName(key)) {
-              if (!el.classList.contains('currency')) el.innerText = p[key];
-            }
+            pEl.$(key).innerText = p[key].toLocaleString();
           }
         }
       }
@@ -84,8 +82,7 @@ function reconnect() {
       if (data.xp > 0) {
         showRewardXpDialog(data.xp);
       } else {
-        delete data.xp;
-        showRewardMoneyDialog(data);
+        showRewardMoneyDialog(data.gold);
       }
     } else if (type === 'initiative-index') {
       $$('.initiative-bar .initiative-cell').forEach(el => el.classList.remove('active'));
@@ -178,8 +175,6 @@ function handlePlayerDragEnd() {
 /////////////
 /////////////
 
-const PARTICLE_XP = 1;
-const PARTICLE_MONEY = 2;
 let effectsCanvas;
 let effectsCtx;
 let particles;
@@ -191,7 +186,6 @@ let originalVals;
 let additionalVals;
 let playerCount;
 let targets;
-let particleType;
 
 const DIFFS = [
   [-1, 0],
@@ -277,7 +271,7 @@ function render() {
     if (p.render(imageData)) alive = true;
   }
 
-  if (particleType === PARTICLE_XP) effectsCtx.putImageData(imageData, 0, 0);
+  effectsCtx.putImageData(imageData, 0, 0);
   time += 1;
 
   if (time > 500) {
@@ -293,11 +287,13 @@ function render() {
       const arrivedVals = Math.ceil(additionalVals[key] * arrivedPercent * 1.1);
 
       if (key === 'xp')
-        $$('.player .xp')[i].innerText =
-          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+        $$('.player .xp')[i].innerText = (
+          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals)
+        ).toLocaleString();
       else {
-        $$('.player td.' + key)[i].innerText =
-          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals);
+        $$('.player td.' + key)[i].innerText = (
+          originalVals[i][key] + Math.min(additionalVals[key], arrivedVals)
+        ).toLocaleString();
       }
     }
   }
@@ -378,62 +374,6 @@ function showXpParticles(xpAmount) {
 
   time = 0;
   alive = true;
-  particleType = PARTICLE_XP;
-
-  requestAnimationFrame(render);
-}
-
-function showMoneyParticles(money) {
-  playerCount = $$('.player:not(.hidden)').length;
-  particles = [];
-
-  effectsCanvas.width = window.innerWidth;
-  effectsCanvas.height = window.innerHeight;
-  particlesPerKey = [];
-
-  for (let p = 0; p < playerCount; p++) {
-    let perKeyCount = {};
-    for (const key in money) {
-      if (money[key] <= 0) continue;
-
-      const originEl = $$('.dialog th .' + key)[p];
-      const { x, y } = originEl.getBoundingClientRect();
-      const targetRect = $$('.player th .' + key)[p].getBoundingClientRect();
-      const dest = [
-        targetRect.x,
-        targetRect.y,
-        targetRect.x + targetRect.width,
-        targetRect.y + targetRect.height,
-        p,
-        key,
-      ];
-
-      const num = Math.min(money[key], 1000);
-      perKeyCount[key] = num;
-      for (let i = 0; i < num; i++) {
-        particles.push(new Particle(x, y, dest, null, originEl));
-      }
-    }
-    particlesPerKey.push(perKeyCount);
-  }
-
-  originalVals = [];
-  additionalVals = money;
-  particlesArrived = [];
-  for (let i = 0; i < playerCount; i++) {
-    const vals = {};
-    const arrived = {};
-    for (const key in money) {
-      vals[key] = toInt($$('.player')[i].$(key).innerText);
-      arrived[key] = 0;
-    }
-    originalVals.push(vals);
-    particlesArrived.push(arrived);
-  }
-
-  time = 0;
-  alive = true;
-  particleType = PARTICLE_MONEY;
 
   requestAnimationFrame(render);
 }
@@ -474,21 +414,17 @@ function closeDialog() {
 
 function showRewardXpDialog(xp) {
   showDialog('xp-reward');
-  $$('.dialog .xp').forEach(el => (el.innerText = xp));
+  $$('.dialog .xp').forEach(el => (el.innerText = xp.toLocaleString()));
   onDialogClose = () => showXpParticles(xp);
 }
 
-function showRewardMoneyDialog(money) {
+function showRewardMoneyDialog(gold) {
   showDialog('money-reward');
-  for (const key in money) {
-    if (money[key] > 0) {
-      $$('.dialog td.' + key).forEach(el => (el.innerText = money[key]));
-    } else {
-      $$('.dialog td.' + key).forEach(el => el.remove());
-      $$('.dialog th .' + key).forEach(el => el.parentElement.remove());
-    }
-  }
-  onDialogClose = () => showMoneyParticles(money);
+  $$('.dialog td.gold').forEach(el => (el.innerText = gold));
+  onDialogClose = () =>
+    $$('.player .gold').forEach(
+      el => (el.innerText = (toInt(el.innerText) + gold).toLocaleString())
+    );
 }
 
 function showImage(url) {

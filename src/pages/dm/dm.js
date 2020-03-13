@@ -47,8 +47,6 @@ function onWebsocketMessage(e) {
     addMessage(data);
   } else if (type === 'data') {
     if (data.players) {
-      let money = { copper: 0, silver: 0, gold: 0, electrum: 0, platin: 0 };
-
       $$('.player').forEach(p => p.remove());
       const playerTemplate = $('#player-template').content;
       for (const i in data.players) {
@@ -60,14 +58,9 @@ function onWebsocketMessage(e) {
 
         for (const key in p) {
           node.$(key).innerText = p[key];
-          if (key in money) money[key] += p[key];
         }
 
         $('.players').appendChild(newPlayer);
-      }
-
-      for (const key in money) {
-        $('.total').$(key).innerText = money[key];
       }
     }
     if (data.map_images) {
@@ -208,11 +201,8 @@ function updatePlayer() {
     'hitdice',
     'hitdice_total',
     'passive_perception',
-    'copper',
-    'silver',
+    'armor_class',
     'gold',
-    'electrum',
-    'platin',
   ];
   let values = {};
   for (const key of keys) {
@@ -264,11 +254,8 @@ function showPlayerDialog(e) {
     'hitdice',
     'hitdice_total',
     'passive_perception',
-    'copper',
-    'silver',
+    'armor_class',
     'gold',
-    'electrum',
-    'platin',
   ];
   for (const key of keys) {
     const val = toInt(target.$(key).innerText);

@@ -28,7 +28,7 @@ canvas#effects {
 .player.one,
 .player.three {
   min-width: 250px;
-  height: 170px;
+  height: 130px;
 }
 
 .player.hidden {
@@ -45,12 +45,12 @@ canvas#effects {
 }
 .player.two {
   right: 0;
-  top: calc(50vh - 120px / 2);
+  top: calc(50vh - 130px / 2);
   bottom: calc(50vh - 60px);
   transform: rotate(-90deg);
-  margin-right: calc(((100vh - 2 * 180px) - 120px) / -2);
-  width: calc(100vh - 2 * 180px);
-  height: 120px;
+  margin-right: calc(((100vh - 2 * 150px) - 130px) / -2);
+  width: calc(100vh - 2 * 150px);
+  height: 130px;
 }
 .player.three {
   top: 0;
@@ -63,6 +63,7 @@ canvas#effects {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding-top: 10px;
 }
 .player.two .tables-container {
   flex-direction: row;
@@ -73,21 +74,23 @@ canvas#effects {
 }
 
 .stats-table th,
-.stats-table td:nth-child(odd),
-.stats-table td:last-child {
+.stats-table td {
   padding-left: 10px;
-}
-.stats-table th,
-.stats-table td:nth-child(even),
-.stats-table td:last-child {
   padding-right: 10px;
+}
+.stats-table td:nth-child(0),
+.stats-table td:nth-child(2) {
+  padding-left: 0;
+}
+.stats-table td:nth-child(1),
+.stats-table td:nth-child(3) {
+  padding-right: 0;
 }
 
 table {
   border-collapse: separate;
   border-spacing: 10px 1px;
   text-align: center;
-  margin: 0 -10px;
 }
 
 .large table {
@@ -225,9 +228,9 @@ table {
 #grid-opacity {
   position: fixed;
   top: calc(50vh - 15px);
-  right: calc(120px + 30px - (100vh - 2 * 180px) / 2);
+  right: calc(130px + 30px - (100vh - 2 * 150px) / 2);
   bottom: calc(50vh - 15px);
-  width: calc(100vh - 2 * 180px);
+  width: calc(100vh - 2 * 150px);
   transform: rotate(-90deg);
 }
 

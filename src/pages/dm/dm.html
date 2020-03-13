@@ -29,25 +29,6 @@
         <div class="players">
           <h2>Spieler</h2>
         </div>
-        <div class="total">
-          <h3>Gesamt</h3>
-          <table class="stats-table">
-            <tr>
-              <th><img class="currency" src="/img/currencies/copper.png" /></th>
-              <th><img class="currency" src="/img/currencies/silver.png" /></th>
-              <th><img class="currency" src="/img/currencies/gold.png" /></th>
-              <th><img class="currency" src="/img/currencies/electrum.png" /></th>
-              <th><img class="currency" src="/img/currencies/platin.png" /></th>
-            </tr>
-            <tr>
-              <td class="copper">0</td>
-              <td class="silver">0</td>
-              <td class="gold">0</td>
-              <td class="electrum">0</td>
-              <td class="platin">0</td>
-            </tr>
-          </table>
-        </div>
       </div>
 
       <div class="middle-section">
@@ -173,29 +154,17 @@
           <tr>
             <th></th>
             <th>XP</th>
-            <th title="Kupfer"><img class="currency" src="/img/currencies/copper.png" /></th>
-            <th title="Silber"><img class="currency" src="/img/currencies/silver.png" /></th>
-            <th title="Gold"><img class="currency" src="/img/currencies/gold.png" /></th>
-            <th title="Elektrum"><img class="currency" src="/img/currencies/electrum.png" /></th>
-            <th title="Platin"><img class="currency" src="/img/currencies/platin.png" /></th>
+            <th title="Gold"><img src="/img/icons/gold.png" /></th>
           </tr>
           <tr class="per-person">
             <td>Pro Person</td>
             <td><input class="xp" type="number" value="0" /></td>
-            <td><input class="copper" type="number" value="0" /></td>
-            <td><input class="silver" type="number" value="0" /></td>
             <td><input class="gold" type="number" value="0" /></td>
-            <td><input class="electrum" type="number" value="0" /></td>
-            <td><input class="platin" type="number" value="0" /></td>
           </tr>
           <tr class="total">
             <td>Zusammen</td>
             <td><input class="xp" type="number" value="0" /></td>
-            <td><input class="copper" type="number" value="0" /></td>
-            <td><input class="silver" type="number" value="0" /></td>
             <td><input class="gold" type="number" value="0" /></td>
-            <td><input class="electrum" type="number" value="0" /></td>
-            <td><input class="platin" type="number" value="0" /></td>
           </tr>
         </table>
 
@@ -216,11 +185,8 @@
             <th colspan="2" class="">HP</th>
             <th colspan="2" class="">TW</th>
             <th title="Passive Wahrnehmung"><img src="/img/icons/visibility.svg" /></th>
-            <th title="Kupfer"><img class="currency" src="/img/currencies/copper.png" /></th>
-            <th title="Silber"><img class="currency" src="/img/currencies/silver.png" /></th>
-            <th title="Gold"><img class="currency" src="/img/currencies/gold.png" /></th>
-            <th title="Elektrum"><img class="currency" src="/img/currencies/electrum.png" /></th>
-            <th title="Platin"><img class="currency" src="/img/currencies/platin.png" /></th>
+            <th title="Rüstungsklasse"><img src="/img/icons/armor.svg" /></th>
+            <th title="Gold"><img src="/img/icons/gold.png" /></th>
           </tr>
           <tr class="current">
             <td></td>
@@ -229,11 +195,8 @@
             <td class="hitdice">0</td>
             <td class="hitdice_total">0</td>
             <td class="passive_perception">0</td>
-            <td class="copper">0</td>
-            <td class="silver">0</td>
+            <td class="armor_class">0</td>
             <td class="gold">0</td>
-            <td class="electrum">0</td>
-            <td class="platin">0</td>
           </tr>
           <tr class="diff">
             <td class="fix-font">+</td>
@@ -242,11 +205,8 @@
             <td><input class="hitdice" type="number" value="0" /></td>
             <td><input class="hitdice_total" type="number" value="0" /></td>
             <td><input class="passive_perception" type="number" value="0" /></td>
-            <td><input class="copper" type="number" value="0" /></td>
-            <td><input class="silver" type="number" value="0" /></td>
+            <td><input class="armor_class" type="number" value="0" /></td>
             <td><input class="gold" type="number" value="0" /></td>
-            <td><input class="electrum" type="number" value="0" /></td>
-            <td><input class="platin" type="number" value="0" /></td>
           </tr>
           <tr class="total">
             <td class="fix-font">=</td>
@@ -255,11 +215,8 @@
             <td><input class="hitdice" type="number" value="0" /></td>
             <td><input class="hitdice_total" type="number" value="0" /></td>
             <td><input class="passive_perception" type="number" value="0" /></td>
-            <td><input class="copper" type="number" value="0" /></td>
-            <td><input class="silver" type="number" value="0" /></td>
+            <td><input class="armor_class" type="number" value="0" /></td>
             <td><input class="gold" type="number" value="0" /></td>
-            <td><input class="electrum" type="number" value="0" /></td>
-            <td><input class="platin" type="number" value="0" /></td>
           </tr>
         </table>
 
@@ -295,11 +252,8 @@
             <th colspan="2">HP</th>
             <th colspan="2">TW</th>
             <th title="Passive Wahrnehmung"><img src="/img/icons/visibility.svg" /></th>
-            <th title="Kupfer"><img class="currency" src="/img/currencies/copper.png" /></th>
-            <th title="Silber"><img class="currency" src="/img/currencies/silver.png" /></th>
-            <th title="Gold"><img class="currency" src="/img/currencies/gold.png" /></th>
-            <th title="Elektrum"><img class="currency" src="/img/currencies/electrum.png" /></th>
-            <th title="Platin"><img class="currency" src="/img/currencies/platin.png" /></th>
+            <th title="Rüstungsklasse"><img src="/img/icons/armor.svg" /></th>
+            <th title="Gold"><img src="/img/icons/gold.png" /></th>
           </tr>
           <tr>
             <td class="hp">0</td>
@@ -307,11 +261,8 @@
             <td class="hitdice">0</td>
             <td class="hitdice_total">0</td>
             <td class="passive_perception">0</td>
-            <td class="copper">0</td>
-            <td class="silver">0</td>
+            <td class="armor_class">0</td>
             <td class="gold">0</td>
-            <td class="electrum">0</td>
-            <td class="platin">0</td>
           </tr>
         </table>
       </div>

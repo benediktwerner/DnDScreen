@@ -32,15 +32,6 @@ h4 input {
   margin-bottom: 20px;
 }
 
-.currency {
-  width: 25px;
-  filter: url(#drop-shadow);
-}
-
-.large .currency {
-  width: 40px;
-}
-
 .button,
 .button:hover,
 button,
@@ -248,4 +239,8 @@ input[type='checkbox'] {
   width: 25px;
   margin-right: 7px;
   display: initial;
+}
+
+.stats-table img {
+  width: 25px;
 }

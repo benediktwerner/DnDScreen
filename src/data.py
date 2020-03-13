@@ -117,11 +117,8 @@ class Player:
         self.hitdice = json.get("hitdice", 0)
         self.hitdice_total = json.get("hitdice_total", self.hitdice)
         self.passive_perception = json.get("passive_perception", 0)
-        self.copper = json.get("copper", 0)
-        self.silver = json.get("silver", 0)
+        self.armor_class = json.get("armor_class", 0)
         self.gold = json.get("gold", 0)
-        self.electrum = json.get("electrum", 0)
-        self.platin = json.get("platin", 0)
 
     def update(self, values):
         for key, val in values.items():
@@ -154,11 +151,8 @@ class Player:
             "hitdice": self.hitdice,
             "hitdice_total": self.hitdice_total,
             "passive_perception": self.passive_perception,
-            "copper": self.copper,
-            "silver": self.silver,
+            "armor_class": self.armor_class,
             "gold": self.gold,
-            "electrum": self.electrum,
-            "platin": self.platin,
         }
 
 
